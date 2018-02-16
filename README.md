@@ -15,6 +15,13 @@ Make sure Network Manger is running
     #   sudo systemctl enable NetworkManager.service
     #   sudo systemctl start NetworkManager.service
 
+Download the Nord VPN server connection files:
+
+    https://nordvpn.com/api/files/zip
+
+Extract the zip and copy the files located in `ovpn_tcp` to `vpn-servers`
+
+
 ## Credits
 
 Written by __[Rick Ellis](http://rickellis.com/)__.
