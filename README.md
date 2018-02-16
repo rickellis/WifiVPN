@@ -17,7 +17,7 @@ Make sure Network Manger is running
 
 Download the Nord VPN server connection files:
 
-    https://nordvpn.com/api/files/zip
+__(https://nordvpn.com/api/files/zip)__
 
 Extract the zip and copy the files located in `ovpn_tcp` to `vpn-servers`
 
