@@ -8,6 +8,7 @@ A Linux installation with the following packages installed:
     * NetworkManager
     * WPA_Supplicant
     * dhclient (for IPv6 support)
+    * Dialog
 
 ## Pre-Flight
 Make sure Network Manger is running
