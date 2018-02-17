@@ -123,7 +123,8 @@ function _home_menu() {
     echo -e "  3) ${GRN}^${RST} VPN  Connect"
     echo -e "  4) ${RED}v${RST} VPN  Disconnect"
     echo
-    echo -e "  5) ${BLU}>${RST} Utilities"
+    echo -e "  5) ${YEL}>${RST} Geolocation"
+    echo -e "  6) ${BLU}>${RST} Utilities"
     echo
     read -p "  " selection
 
@@ -158,6 +159,10 @@ function _home_menu() {
         _vpn_disconnect
     ;;
     5)
+        clear
+        _geolocation
+    ;;
+    6)
         clear
         _utilities
     ;;
@@ -302,12 +307,12 @@ function _vpn_connect() {
     else
 
         # If there are no active or VPN connections there is nothing to disconnect
-        if [ ! -z "${ACTIVECONS}" ] && echo "$ACTIVEONS" | egrep -q "(^|\s)${PROFILE_NAME}($|\s)"; then
+        if [ ! -z "${ACTIVECONS}" ] && echo "$ACTIVECONS" | egrep -q "(^|\s)${PROFILE_NAME}($|\s)"; then
             echo " Disconnecting active VPN"
             echo
-            nmcli -t con down id "${PROFILE_NAME}" >/dev/null 2>&1 
+            nmcli -t con down id "${PROFILE_NAME}" >/dev/null 2>&1
+            sleep 2 
         fi
-
 
         echo " Downloading server data from nordvpn.com"
         echo 
@@ -327,6 +332,7 @@ function _vpn_connect() {
         if [ "$server" == "" ]; then
             echo -e " ${RED}Error: Unable to acquire the name of the fastest server. Aborting...${RST}"
             echo 
+            _submenu
             exit 1
         fi
 
@@ -334,6 +340,7 @@ function _vpn_connect() {
         if [ ! -f "${VPN_SERVERS}/${server}.tcp.ovpn" ]; then
             echo " Unable to find the OVPN file: ${VPN_SERVERS}/${server}.tcp.ovpn"
             echo
+            _submenu
             exit 1
         fi
 
@@ -393,17 +400,14 @@ function _vpn_connect() {
         zipcode=$(echo $IPDATA | jq -r .zip_code) >/dev/null 2>&1 
         tz=$(echo $IPDATA | jq -r .time_zone) >/dev/null 2>&1 
 
-        echo -e " IP address: ${YEL}${IP}${RST}"
-
-        if [ -z "$city" ]; then
-            echo " Unable to lookup city and state"
-        else
-            echo
-            echo -e " Location:   ${YEL}${city} ${state}${RST}"
-            echo
-            echo -e " Timezone:   ${YEL}${tz}${RST}"
-        fi
+        echo -e " IP address: ${GRN}${IP}${RST}"
         echo
+        echo -e " Location:   ${YEL}${city}, ${state} ${zipcode}${RST}"
+        echo
+        echo -e " Timezone:   ${BLU}${tz}${RST}"
+        echo 
+
+        _submenu
     fi
 }
 
@@ -418,11 +422,47 @@ function _vpn_disconnect() {
     echo
 
     # If there are no active or VPN connections there is nothing to disconnect
-    if [ -z "${ACTIVECONS}" ] || ! echo "$ACTIVEONS" | egrep -q "(^|\s)${PROFILE_NAME}($|\s)"; then
+    if [ -z "${ACTIVECONS}" ] || ! echo "$ACTIVECONS" | egrep -q "(^|\s)${PROFILE_NAME}($|\s)"; then
         echo -e " ${YEL}You are not connected to a VPN${RST}"
     else
         nmcli -t con down id "${PROFILE_NAME}" >/dev/null 2>&1 
         echo -e " ${YEL}You have been disconnected from ${PROFILE_NAME}${RST}"
+    fi
+
+    _submenu
+}
+
+# ------------------------------------------------------------------------------
+
+# Display city, state, IP
+function _geolocation() {
+
+    echo
+    echo -e "${BGRN}                                 Geolocation                                ${RST}"
+    echo
+
+     # If there are no active or VPN connections there is nothing to disconnect
+    if [ -z "${ACTIVECONS}" ] || ! echo "$ACTIVECONS" | egrep -q "(^|\s)${PROFILE_NAME}($|\s)"; then
+        echo -e " ${YEL}You are not connected to a VPN${RST}"
+    else
+
+        echo " Downloading geolocation data"
+        echo
+            
+        IP=$(curl -slent ipinfo.io/ip)        
+        IPDATA=$(curl -slent freegeoip.net/json/${IP})
+
+        city=$(echo $IPDATA | jq -r .city) >/dev/null 2>&1 
+        state=$(echo $IPDATA | jq -r .region_name) >/dev/null 2>&1 
+        zipcode=$(echo $IPDATA | jq -r .zip_code) >/dev/null 2>&1 
+        tz=$(echo $IPDATA | jq -r .time_zone) >/dev/null 2>&1 
+
+        echo -e " IP address: ${GRN}${IP}${RST}"
+        echo
+        echo -e " Location:   ${YEL}${city}, ${state} ${zipcode}${RST}"
+        echo
+        echo -e " Timezone:   ${BLU}${tz}${RST}"
+        echo 
     fi
 
     _submenu
