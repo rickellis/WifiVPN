@@ -100,7 +100,7 @@ function _home_menu() {
 
     # Show page heading
     echo
-    echo -e "${BMAG}                         Wifi Version ${VERSION}                          ${RST}"
+    echo -e "${BMAG}                        WifiVPN Version ${VERSION}                        ${RST}"
     echo
 
     # Show the general status of the network

@@ -33,6 +33,14 @@ Launch the script and you'll be presented with an interface that lets you:
 * Disconnect from VPN
 * Manage related settings
 
+## Terminal Alias
+For convenience you can add the following function to your .bashrc file:
+
+    # Wifi/VPN connection utility
+    function wifivpn() {
+        $HOME/path/to/WifiVPN/wifivpn.sh
+    }
+
 
 ## Credits
 
