@@ -25,7 +25,13 @@ __https://nordvpn.com/api/files/zip__
 Extract the zip and copy the files in the `ovpn_tcp` directory to the `vpn-servers` directory from this repo.
 
 ## Usage
-Launch the script and you'll be presented with 
+Launch the script and you'll be presented with an interface that lets you:
+
+* Log onto a wifi network
+* Log into a Nord VPN server
+* Disconnect from wifi
+* Disconnect from VPN
+* Manage related settings
 
 
 ## Credits
