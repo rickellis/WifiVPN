@@ -1,7 +1,7 @@
 # WifiVPN
 Wifi and Nord VPN connecting script using Network Manager Command Line Interface (NMCLI), written in Bash.
 
-[Imgur](https://i.imgur.com/Afnge6x.png)
+<img src="https://i.imgur.com/Afnge6x.png" />
 
 ## Requirements
 A Linux installation with the following packages installed:
