@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 #-----------------------------------------------------------------------------------
-#          _  __ _
-#  __ __ _(_)/ _(_)
-#  \ V  V / |  _| |
-#   \_/\_/|_|_| |_|
+#          _  __ _               
+#  __ __ _(_)/ _(_)_ ___ __ _ _  
+#  \ V  V / |  _| \ V / '_ \ ' \ 
+#   \_/\_/|_|_| |_|\_/| .__/_||_|
+#                     |_|        
 #
 #-----------------------------------------------------------------------------------
 VERSION="1.0.0"
@@ -83,7 +84,7 @@ function _get_connections() {
 
     # This removes linebreaks from $ACTIVECONS
     # so we can show all the connections on one line.
-    LISTCONS=${ACTIVECONS//$'\n'/\ }
+    LISTCONS=${ACTIVECONS//$'\n'/\ -\ }
 
     # Get the names of all existing connection profiles
     PROFILES=$(nmcli con show)
@@ -123,7 +124,8 @@ function _home_menu() {
     echo -e "  4) ${RED}v${RST} VPN  Disconnect"
     echo
     echo -e "  5) ${BLU}>${RST} Utilities"
-    read selection
+    echo
+    read -p "  " selection
 
     # If they hit enter we exit
     if [ -z "$selection" ]; then
@@ -178,15 +180,16 @@ function _wifi_connect() {
     echo
 
     # Rescan the network for a current list of hotspots
-    nmcli -w 3 device wifi rescan
-    sleep 3
+    nmcli -w 4 device wifi rescan >/dev/null 2>&1 
+    sleep 4
 
     # Generate a list of all available hotspots
     nmcli dev wifi
     echo -e "\n"
 
     echo " ENTER THE NAME OF A NETWORK TO CONNECT TO (OR HIT ENTER FOR MAIN MENU):"
-    read network
+    echo
+    read -p " " network
 
     if [ -z "$network" ]; then
         clear
@@ -223,7 +226,8 @@ function _wifi_connect() {
 
         echo
         echo " Enter the password for this network (or hit enter for no password)"
-        read password
+        echo
+        read -p " " password
         
         echo 
         echo " Connecting..."
@@ -297,10 +301,20 @@ function _vpn_connect() {
         _submenu        
     else
 
+        # If there are no active or VPN connections there is nothing to disconnect
+        if [ ! -z "${ACTIVECONS}" ] && echo "$ACTIVEONS" | egrep -q "(^|\s)${PROFILE_NAME}($|\s)"; then
+            echo " Disconnecting active VPN"
+            echo
+            nmcli -t con down id "${PROFILE_NAME}" >/dev/null 2>&1 
+        fi
+
+
+        echo " Downloading server data from nordvpn.com"
+        echo 
+
         # Fetch the JSON server list from Nord
         # Select only US servers with less than 5% load.
         # Returns an array with filenames.
-        echo " Downloading server data from nordvpn.com..."
         fastest=$(curl -s 'https://nordvpn.com/api/server' | jq -r 'sort_by(.load) | .[] | select(.load < '5' and .flag == '\"US\"' and .features.openvpn_tcp == true ) | .domain')
 
         server=""
@@ -311,18 +325,21 @@ function _vpn_connect() {
 
         # No server returned?
         if [ "$server" == "" ]; then
-            echo -e " ${RED}Error: Unable to acquire the name of the fastest server. Aborting...${RST}"    
+            echo -e " ${RED}Error: Unable to acquire the name of the fastest server. Aborting...${RST}"
+            echo 
             exit 1
         fi
 
-        # Does the local Nord VPN file exist?
+        # Does the local version Nord VPN file exist?
         if [ ! -f "${VPN_SERVERS}/${server}.tcp.ovpn" ]; then
             echo " Unable to find the OVPN file: ${VPN_SERVERS}/${server}.tcp.ovpn"
+            echo
             exit 1
         fi
 
-        # Delete the old VPN profile if it exists
-        echo " Deleting old VPN profile..."
+        # A bit of housekeeping.
+        echo " Deleting old VPN profile."
+        echo 
         nmcli con delete id "${PROFILE_NAME}" >/dev/null 2>&1 
         sleep 2
 
@@ -334,42 +351,60 @@ function _vpn_connect() {
         cp "${VPN_SERVERS}/${server}.tcp.ovpn" "${VPN_SERVERS}/${PROFILE_NAME}.ovpn"
 
         # Import the new profile
-        echo " Importing new VPN profile..."
+        echo " Importing new VPN profile"
+        echo 
         nmcli con import type openvpn file "${VPN_SERVERS}/${PROFILE_NAME}.ovpn"  >/dev/null 2>&1 
         sleep 2
 
-        echo " Configuring profile..."
+        echo " Configuring profile"
+        echo 
 
         # Insert username into config file
-        $(sudo nmcli connection modify ${PROFILE_NAME} +vpn.data username=${username})
+        sudo nmcli connection modify "${PROFILE_NAME}" +vpn.data username="${username}"  >/dev/null 2>&1
 
         # Set the password flag
-        $(sudo nmcli connection modify ${PROFILE_NAME} +vpn.data password-flags=0)
+        sudo nmcli connection modify "${PROFILE_NAME}" +vpn.data password-flags=0  >/dev/null 2>&1 
 
         # Insert password into the profile
         echo -e "\n\n[vpn-secrets]\npassword=${password}" | sudo tee -a "${PROFILE_PATH}/${PROFILE_NAME}" >/dev/null 2>&1 
+        sleep 2
 
         # Reload the config file
-        echo " Reloading config file..."
-        sudo nmcli connection reload "${PROFILE_NAME}"
+        echo
+        echo " Reloading config file"
+        echo
+        sudo nmcli connection reload "${PROFILE_NAME}"  >/dev/null 2>&1 
 
         # Delete the temp file
         rm "${VPN_SERVERS}/${PROFILE_NAME}.ovpn"
 
-        echo " Connecting to ${server}..."
-        nmcli con up id "${PROFILE_NAME}"
+        echo " Connecting to ${server}"
+        echo
+        nmcli con up id "${PROFILE_NAME}" >/dev/null 2>&1 
 
+        echo " Downloading geolocation data"
+        echo
 
+        IP=$(curl -slent ipinfo.io/ip)
+        IPDATA=$(curl -slent freegeoip.net/json/${IP})
 
+        city=$(echo $IPDATA | jq -r .city) >/dev/null 2>&1 
+        state=$(echo $IPDATA | jq -r .region_name) >/dev/null 2>&1 
+        zipcode=$(echo $IPDATA | jq -r .zip_code) >/dev/null 2>&1 
+        tz=$(echo $IPDATA | jq -r .time_zone) >/dev/null 2>&1 
 
+        echo -e " IP address: ${YEL}${IP}${RST}"
 
-
-
-
-
-
+        if [ -z "$city" ]; then
+            echo " Unable to lookup city and state"
+        else
+            echo
+            echo -e " Location:   ${YEL}${city} ${state}${RST}"
+            echo
+            echo -e " Timezone:   ${YEL}${tz}${RST}"
+        fi
+        echo
     fi
-
 }
 
 # ------------------------------------------------------------------------------
@@ -406,7 +441,8 @@ function _utilities() {
     echo
     echo "  1) Show saved profiles"
     echo "  2) Delete a saved profiles"
-    read selection
+    echo
+    read -p "  " selection
 
     # If they hit ENTER we exit
     if [ -z "$selection" ]; then
@@ -435,7 +471,8 @@ function _utilities() {
 function _submenu(){
     echo
     echo " PRESS \"M\" TO RETURN TO MAIN MENU OR HIT ENTER TO EXIT"
-    read selection
+    echo
+    read -p " " selection
 
     # If they hit ENTER we exit
     if [ -z "$selection" ]; then
