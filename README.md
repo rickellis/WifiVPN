@@ -1,5 +1,7 @@
 # WifiVPN
-Wifi and Nord VPN connect script using Network Manager Command Line Interface (NMCLI), written in Bash. It allows a variety of Wifi related actions (connect, disconnect, profile management, etc.), as well as the ability to download the Nord server data, select the fastest one, and connect to it. It also shows geolocation data, so once a VPN connection has been established, you'll know what city, state, zipcode, and timezone your connection is running through.
+Wifi and Nord VPN connecting script using Network Manager Command Line Interface (NMCLI), written in Bash. 
+
+WifiVPN allows a variety of Wifi related actions (connect, disconnect, profile management, network status, etc.), as well as the ability to automatically download the most current Nord server data, select the fastest one, and connect to it. It also shows geolocation data, informing you what city, state and timezone your connection is running through.
 
 <img src="https://i.imgur.com/8pU2y3b.png" />
 
@@ -14,12 +16,9 @@ A Linux installation with the following packages installed:
     * Dialog
 
 ## Pre-Flight
-Make sure Network Manger is running
+Before running WifiVPN do the following:
 
-    #   sudo systemctl enable NetworkManager.service
-    #   sudo systemctl start NetworkManager.service
-
-Download the Nord VPN server connection files:
+### Download the Nord VPN server connection files:
 
 __https://nordvpn.com/api/files/zip__
 
@@ -29,17 +28,39 @@ Extract the zip and copy the files in the `ovpn_tcp` directory to the `vpn-serve
     WifiVPN/vpn-servers/al2.nordvpn.com.tcp.ovpn
     etc.
 
-## Usage
-Launch the script and you'll be presented with an interface.
+### Create credentials file
 
-## Terminal Alias
-For convenience you can add the following function to your .bashrc file:
+Create a file named `credentials.sh` and place it in the `WifiVPN` folder. In that file, put your Nord VPN login credentials as follows:
+
+    #!/usr/bin/env bash
+
+    USERNAME="your-username"
+    PASSWORD="your-password"
+
+
+### Make sure Network Manger is running
+
+    #   sudo systemctl enable NetworkManager.service
+    #   sudo systemctl start NetworkManager.service
+
+### Make WifiVPN executable
+
+    #   chmod +x wifivpn.sh
+
+## Usage
+To use WifiVPN, launch your terminal and execute the script:
+
+    #   ./wifivpn.sh
+
+You should then see an interface that looks like the screenshot above.
+
+## Terminal Shortcut
+For convenience you can add the following function to your .bashrc file, which will allow you to run WifiVPN by typing `wifivpn` rather than traversing to the directory and executing it.
 
     # Wifi/VPN connection utility
     function wifivpn() {
         $HOME/path/to/WifiVPN/wifivpn.sh
     }
-
 
 ## Credits
 
