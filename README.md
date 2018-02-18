@@ -23,16 +23,14 @@ Download the Nord VPN server connection files:
 
 __https://nordvpn.com/api/files/zip__
 
-Extract the zip and copy the files in the `ovpn_tcp` directory to the `vpn-servers` directory from this repo.
+Extract the zip and copy the files in the `ovpn_tcp` directory to the `vpn-servers` directory from this repo. You should end up with a directory structure that looks like this:
+
+    WifiVPN/vpn-servers/al1.nordvpn.com.tcp.ovpn
+    WifiVPN/vpn-servers/al2.nordvpn.com.tcp.ovpn
+    etc.
 
 ## Usage
-Launch the script and you'll be presented with an interface that lets you:
-
-* Log onto a wifi network
-* Log into a Nord VPN server
-* Disconnect from wifi
-* Disconnect from VPN
-* Manage related settings
+Launch the script and you'll be presented with an interface.
 
 ## Terminal Alias
 For convenience you can add the following function to your .bashrc file:
