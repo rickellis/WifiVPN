@@ -122,6 +122,7 @@ function _show_status_table() {
 
 # Generate the home screen
 function _home_menu() {
+    clear
     unset selection
     _set_connection_vars
 
