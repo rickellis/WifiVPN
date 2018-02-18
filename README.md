@@ -1,7 +1,8 @@
 # WifiVPN
-Wifi and Nord VPN connect script using Network Manager Command Line Interface (NMCLI), written in Bash.
+Wifi and Nord VPN connect script using Network Manager Command Line Interface (NMCLI), written in Bash. It allows a variety of Wifi related actions (connect, disconnect, profile management, etc.), as well as the ability to download the Nord server data, select the fastest one, and connect to it. It also shows geolocation data, so once a VPN connection has been established, you'll know what city, state, zipcode, and timezone your connection is running through.
 
 <img src="https://i.imgur.com/8pU2y3b.png" />
+
 
 ## Requirements
 A Linux installation with the following packages installed:
