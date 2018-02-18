@@ -212,6 +212,8 @@ function _wifi_connect() {
     echo
     echo -e " ${GRN}Scanning networks${RST}"
     echo
+    echo -e " ${YEL}Press \"q\" to show SELECTION prompt if not shown after network list${RST}"
+    echo
 
     # Rescan the network for a current list of hotspots
     nmcli -w 4 device wifi rescan >/dev/null 2>&1 
@@ -219,17 +221,23 @@ function _wifi_connect() {
 
     # Generate a list of all available hotspots
     nmcli dev wifi
-    echo -e "\n"
 
-    echo "  ENTER THE NAME OF A NETWORK TO CONNECT TO, OR"
+    echo
+    echo -e "  ENTER THE NAME OF A NETWORK TO CONNECT TO, OR"
     echo
     echo -e "  M) ${YEL}^${RST} MAIN MENU"
     echo -e "  X) ${YEL}<${RST} EXIT"
     echo
     read -p "  ENTER SELECTION:  " NETWORK
 
+    # If they hit enter we exit
+    if [ -z "$NETWORK" ]; then
+        clear
+        exit 1
+    fi
+
     # If they hit "m" we show the home page
-    if [ -z "$NETWORK" ] || [ "$NETWORK" == 'm' ] || [ "$NETWORK" == 'M' ]; then
+    if [ "$NETWORK" == 'm' ] || [ "$NETWORK" == 'M' ]; then
         clear
         _home_menu
         exit 1
@@ -357,6 +365,12 @@ function _vpn_connect() {
         echo
         read -p "  ENTER SELECTION:  " SELECTION
 
+        # If they hit enter we exit
+        if [ -z "$SELECTION" ]; then
+            clear
+            exit 1
+        fi
+
         # If they hit "m" we show the home page
         if [ "$SELECTION" == 'm' ] || [ "$SELECTION" == 'M' ]; then
             clear
@@ -468,7 +482,8 @@ function _vpn_connect() {
         # Set the password flag
         sudo nmcli connection modify "${PROFILE_NAME}" +vpn.data password-flags=0 >/dev/null 2>&1 
 
-        # Insert password into the profile
+        # Write password into the profile file.
+        # Note: since the profiles are stored in /root we use sudo tee
         echo -e "\n\n[vpn-secrets]\npassword=${PASSWORD}" | sudo tee -a "${PROFILE_PATH}/${PROFILE_NAME}" >/dev/null 2>&1 
         sleep 2
 
