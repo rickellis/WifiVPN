@@ -7,7 +7,7 @@
 #                     |_|        
 #
 #-----------------------------------------------------------------------------------
-VERSION="1.2.2"
+VERSION="1.2.5"
 #-----------------------------------------------------------------------------------
 #
 # Enables Wifi and Nord VPN connectivity using Network Manager Command Line Interface.
@@ -20,9 +20,23 @@ VERSION="1.2.2"
 # License:  MIT
 #-----------------------------------------------------------------------------------
 
+# Use only servers from a particular country.
+# Use 2 letter country code: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+# For all countries leave blank
+COUNTRY_CODE="US"
+
+# Return servers with a load of less than X percent.
+# DO NOT include percentage sign.
+SERVER_LOAD="10"
+
+# ADDITIONAL CONFIG VARIABLES. UNLIKELY THEY WILL NEED TO BE CHANGED ---------------
+
 # Name of the credentials file containing the Nord VPN username/password.
 # See README for mor information on creating this.
 CREDENTIALS="credentials.sh"
+
+# Nord API server dtata
+NORD_SERVER_DATA="https://nordvpn.com/api/server"
 
 # Path to the Network Manager Connections folder. This is the path on Arch Linux.
 # It's possible that the path might be different on other flavors of Linux.
@@ -34,6 +48,12 @@ BASEPATH=$(dirname -- $(readlink -fn -- "$0"))
 
 # Path to folder containing NordVPN server config files
 VPN_SERVERS="${BASEPATH}/vpn-servers"
+
+# Suffix for vpn server config files
+# NOTE: We will likely need a more robust solution. There is more than one
+# version of the Nord files available at nord.com, and the naming scheme
+# is slightly different. This works for now but it might break.
+VPN_SERVERS_SFX=".tcp.ovpn"
 
 # The name we're calling the active VPN profile. Every time a new Nord server is
 # selected and used, the profile is named the same. This allows us to connect,
@@ -49,17 +69,18 @@ MAG="\033[95m"
 CYN="\033[96m"
 WHT="\033[97m"
 
-# Define background colors
-BRED="\033[41m"
-BBLU="\033[44m"
-BGRN="\033[42m"
-BMAG="\033[45m"
+# Define background colors with white text
+BRED="\033[41m\033[97m"
+BBLU="\033[44m\033[97m"
+BGRN="\033[42m\033[97m"
+BMAG="\033[45m\033[97m"
 
 # Reset color
 RST="\033[0m"
 
 # Load the credentials file
-source "${BASEPATH}/${CREDENTIALS}"
+# Note: . is a synonym for source, but more portable
+. "${BASEPATH}/${CREDENTIALS}"
 
 # ------------------------------------------------------------------------------
 
@@ -418,7 +439,7 @@ function _vpn_connect() {
         # Disconnect from the old profile if it exists
         if [ ! -z "${ACTIVECONS}" ] && echo "$ACTIVECONS" | egrep -q "(^|\s)${PROFILE_NAME}($|\s)"; then
             echo
-            echo -e " ${RED}Disconnecting active VPN${RST}"
+            echo -e "  ${RED}Disconnecting active VPN${RST}"
             nmcli -t con down id "${PROFILE_NAME}" >/dev/null 2>&1
             sleep 2 
         fi
@@ -427,10 +448,13 @@ function _vpn_connect() {
         echo -e "  ${GRN}Downloading Nord VPN server data${RST}"
         echo 
 
-        # Fetch the JSON server list from Nord
-        # Select only US servers with less than 5% load.
-        # Returns an array with filenames.
-        fastest=$(curl -s 'https://nordvpn.com/api/server' | jq -r 'sort_by(.load) | .[] | select(.load < '5' and .flag == '\"US\"' and .features.openvpn_tcp == true ) | .domain')
+        # Fetch the server data from Nord. JSON format.
+        if [ -z "$COUNTRY_CODE" ]; then
+            fastest=$(curl -s ${NORD_SERVER_DATA} | jq -r 'sort_by(.load) | .[] | select(.load < '${SERVER_LOAD}' and .features.openvpn_tcp == true ) | .domain')
+        else
+            COUNTRY_CODE=${COUNTRY_CODE^^}
+            fastest=$(curl -s ${NORD_SERVER_DATA} | jq -r 'sort_by(.load) | .[] | select(.load < '${SERVER_LOAD}' and .flag == '\"${COUNTRY_CODE}\"' and .features.openvpn_tcp == true ) | .domain')
+        fi
 
         server=""
         for filename in $fastest; do
@@ -441,16 +465,17 @@ function _vpn_connect() {
         # No server returned?
         if [ "$server" == "" ]; then
             echo
-            echo -e "  ${RED}ERROR: Unable to acquire the name of the fastest server. Aborting...${RST}"
+            echo -e "  ${RED}ERROR: Server query returned no results.${RST}"
+            echo -e "  ${YEL}Tip: Set a higher load percentage in the script variables.${RST}"
             _submenu
             exit 1
         fi
 
         # Does the local version Nord VPN file exist?
-        if [ ! -f "${VPN_SERVERS}/${server}.tcp.ovpn" ]; then
+        if [ ! -f "${VPN_SERVERS}/${server}${VPN_SERVERS_SFX}" ]; then
             echo
             echo -e "  ${RED}ERROR:Unable to find the OVPN file:${RST}"
-            echo -e "  ${YEL}${VPN_SERVERS}/${server}.tcp.ovpn${RST}"
+            echo -e "  ${YEL}${VPN_SERVERS}/${server}${VPN_SERVERS_SFX}${RST}"
             _submenu
             exit 1
         fi
@@ -466,7 +491,7 @@ function _vpn_connect() {
         # allows us to delete the old profile everytime we run this script.
         # There are over 1000 servers to choose from so we would need a
         # tracking mechanism if we didn't use the same name.
-        cp "${VPN_SERVERS}/${server}.tcp.ovpn" "${VPN_SERVERS}/${PROFILE_NAME}.ovpn"
+        cp "${VPN_SERVERS}/${server}${VPN_SERVERS_SFX}" "${VPN_SERVERS}/${PROFILE_NAME}.ovpn"
 
         # Import the new profile
         echo -e "  ${GRN}Importing new VPN profile${RST}"
