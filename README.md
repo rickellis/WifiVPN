@@ -20,7 +20,7 @@ Before running WifiVPN do the following:
 
 ### Download the Nord VPN server connection files:
 
-__https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip_
+__https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip__
 
 Extract the zip and copy the files in the `ovpn_tcp` directory to the `vpn-servers` directory from this repo. You should end up with a directory structure that looks like this:
 
