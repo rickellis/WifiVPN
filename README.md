@@ -37,9 +37,8 @@ Create a file named `credentials.sh` and place it in the `WifiVPN` folder. In th
     USERNAME="your-username"
     PASSWORD="your-password"
 
-### Set country code and load threshold
-Open `wifivpn.sh` and set the config variables at the top of the file for your desired country and minimum load threshold for servers.
-
+### Set country code
+Open `wifivpn.sh` and set the config variables at the top of the file for your desired country.
 
 ### Make sure Network Manger is running
 
