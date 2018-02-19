@@ -20,7 +20,7 @@ Before running WifiVPN do the following:
 
 ### Download the Nord VPN server connection files:
 
-__https://nordvpn.com/api/files/zip__
+__https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip_
 
 Extract the zip and copy the files in the `ovpn_tcp` directory to the `vpn-servers` directory from this repo. You should end up with a directory structure that looks like this:
 
@@ -36,6 +36,9 @@ Create a file named `credentials.sh` and place it in the `WifiVPN` folder. In th
 
     USERNAME="your-username"
     PASSWORD="your-password"
+
+### Set country code and load threshold
+Open `wifivpn.sh` and set the config variables at the top of the file for your desired country and minimum load threshold for servers.
 
 
 ### Make sure Network Manger is running
