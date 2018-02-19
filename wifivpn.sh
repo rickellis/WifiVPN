@@ -7,7 +7,7 @@
 #                     |_|        
 #
 #-----------------------------------------------------------------------------------
-VERSION="1.2.1"
+VERSION="1.2.2"
 #-----------------------------------------------------------------------------------
 #
 # Enables Wifi and Nord VPN connectivity using Network Manager Command Line Interface.
@@ -47,6 +47,7 @@ BLU="\033[94m"
 YEL="\033[93m"
 MAG="\033[95m"
 CYN="\033[96m"
+WHT="\033[97m"
 
 # Define background colors
 BRED="\033[41m"
@@ -128,7 +129,7 @@ function _home_menu() {
     _load_connections
 
     echo
-    echo -e "${BMAG}                        WifiVPN VERSION ${VERSION}                        ${RST}"
+    echo -e "${BMAG}${WHT}                        WifiVPN VERSION ${VERSION}                        ${RST}"
     echo
     echo
 
@@ -142,7 +143,7 @@ function _home_menu() {
 
     echo
     echo
-    echo -e "${BGRN}  MENU                                                               ${RST}"
+    echo -e "${BGRN}${WHT}  MENU                                                               ${RST}"
     echo
     echo -e "  1) ${GRN}^${RST} Wifi Connect"
     echo -e "  2) ${RED}v${RST} Wifi Disconnect"
@@ -208,7 +209,7 @@ function _wifi_connect() {
     unset NETWORK
 
     echo
-    echo -e "${BMAG}                              WIFI CONNECT                           ${RST}"
+    echo -e "${BMAG}${WHT}                              WIFI CONNECT                           ${RST}"
     echo
     echo -e " ${GRN}Scanning networks${RST}"
     echo
@@ -301,7 +302,7 @@ function _wifi_connect() {
 # Disconnect from the active wifi connection
 function _wifi_disconnect() {
     echo
-    echo -e "${BRED}                              WIFI DISCONNECT                        ${RST}"
+    echo -e "${BRED}${WHT}                              WIFI DISCONNECT                        ${RST}"
     echo
     echo 
 
@@ -333,7 +334,7 @@ function _vpn_connect() {
     unset VPN_PROFILE
 
     echo
-    echo -e "${BMAG}                              VPN CONNECT                            ${RST}"
+    echo -e "${BMAG}${WHT}                              VPN CONNECT                            ${RST}"
     echo
 
     if [ -z "${ACTIVECONS}" ]; then
@@ -512,7 +513,7 @@ function _vpn_disconnect() {
    
    # Show page heading
     echo
-    echo -e "${BRED}                             VPN DISCONNECT                          ${RST}"
+    echo -e "${BRED}${WHT}                             VPN DISCONNECT                          ${RST}"
     echo
     echo
 
@@ -533,7 +534,7 @@ function _vpn_disconnect() {
 function _geolocation() {
 
     echo
-    echo -e "${BMAG}                              GEOLOCATION                            ${RST}"
+    echo -e "${BMAG}${WHT}                              GEOLOCATION                            ${RST}"
     echo
 
     if [ -z "${ACTIVECONS}" ]; then
@@ -567,7 +568,7 @@ function _utilities() {
 
     # Show page heading
     echo
-    echo -e "${BMAG}                               UTILITIES                             ${RST}"
+    echo -e "${BMAG}${WHT}                               UTILITIES                             ${RST}"
     echo
 
     echo -e "  1) ${GRN}>${RST} Show Active Connections"
@@ -657,7 +658,7 @@ function _utilities() {
 
 function _show_active_cons() {
     echo
-    echo -e "${BMAG}                          ACTIVE CONNECTIONS                         ${RST}"
+    echo -e "${BMAG}${WHT}                          ACTIVE CONNECTIONS                         ${RST}"
     echo
     nmcli con show --active
     _util_submenu
@@ -667,7 +668,7 @@ function _show_active_cons() {
 
 function _show_interface_status() {
     echo
-    echo -e "${BMAG}                        NETWORK INTERFACE STATUS                     ${RST}"
+    echo -e "${BMAG}${WHT}                        NETWORK INTERFACE STATUS                     ${RST}"
     echo
     nmcli device status
     _util_submenu
@@ -677,7 +678,7 @@ function _show_interface_status() {
 
 function _turn_wifi_on() {
     echo
-    echo -e "${BMAG}                              WIFI STATUS                            ${RST}"
+    echo -e "${BMAG}${WHT}                              WIFI STATUS                            ${RST}"
     echo
     nmcli radio wifi on 
     echo
@@ -689,7 +690,7 @@ function _turn_wifi_on() {
 
 function _turn_wifi_off() {
     echo
-    echo -e "${BMAG}                              WIFI STATUS                            ${RST}"
+    echo -e "${BMAG}${WHT}                              WIFI STATUS                            ${RST}"
     echo
     nmcli radio wifi off
     echo
@@ -701,7 +702,7 @@ function _turn_wifi_off() {
 
 function _turn_network_on() {
     echo
-    echo -e "${BMAG}                             NETWORK STATUS                          ${RST}"
+    echo -e "${BMAG}${WHT}                             NETWORK STATUS                          ${RST}"
     echo
     nmcli networking on
     echo
@@ -713,7 +714,7 @@ function _turn_network_on() {
 
 function _turn_network_off() {
     echo
-    echo -e "${BMAG}                             NETWORK STATUS                          ${RST}"
+    echo -e "${BMAG}${WHT}                             NETWORK STATUS                          ${RST}"
     echo
     nmcli networking off
     echo
@@ -725,7 +726,7 @@ function _turn_network_off() {
 
 function _show_profiles() {
     echo
-    echo -e "${BMAG}                          ALL SAVED PROFILES                         ${RST}"
+    echo -e "${BMAG}${WHT}                          ALL SAVED PROFILES                         ${RST}"
     echo
     nmcli con show
     _util_submenu
@@ -736,7 +737,7 @@ function _show_profiles() {
 function _delete_profile() {
     unset SELECTION
     echo
-    echo -e "${BMAG}                            DELETE PROFILE                           ${RST}"
+    echo -e "${BMAG}${WHT}                            DELETE PROFILE                           ${RST}"
     echo
     
     nmcli con show
@@ -781,7 +782,7 @@ function _submenu(){
 
     echo
     echo
-    echo -e "${BGRN}  MENU                                                               ${RST}"
+    echo -e "${BGRN}${WHT}  MENU                                                               ${RST}"
     echo
 
     echo -e "  M) ${YEL}^${RST} MAIN MENU"
@@ -815,7 +816,7 @@ function _util_submenu(){
 
     echo
     echo
-    echo -e "${BGRN}  MENU                                                               ${RST}"
+    echo -e "${BGRN}${WHT}  MENU                                                               ${RST}"
     echo
     echo -e "  M) ${YEL}^${RST} MAIN MENU"
     echo -e "  U) ${YEL}^${RST} UTILITIES"
