@@ -7,7 +7,7 @@
 #                     |_|        
 #
 #-----------------------------------------------------------------------------------
-VERSION="1.2.6"
+VERSION="1.3.0"
 #-----------------------------------------------------------------------------------
 #
 # Enables Wifi and Nord VPN connectivity using Network Manager Command Line Interface.
@@ -37,6 +37,10 @@ CREDENTIALS="credentials.sh"
 
 # Nord API server dtata
 NORD_SERVER_DATA="https://nordvpn.com/api/server"
+
+# Geolocation helper URLs
+GEOLOOKUP_URL="freegeoip.net/json/"
+IPLOOKUP_URL="ipinfo.io/ip"
 
 # Path to the Network Manager Connections folder. This is the path on Arch Linux.
 # It's possible that the path might be different on other flavors of Linux.
@@ -80,7 +84,6 @@ RST="\033[0m"
 
 # Generates heading with a background color and white text, centered.
 function _heading() {
-
     if [ -z "$1" ] || [ -z "$2" ]; then
         echo 'Usage: heading <color> "My cool heading"'
         exit 1
@@ -89,63 +92,84 @@ function _heading() {
     color=${1}
     color=${color,,} # Lowercase the color
     text=${2}
-    length=74 # Overal length of heading
     reset="\033[0m"
-    
-    case "$color" in
-    black | blk)
-        color="\033[40m\033[97m" # Black with white text
-    ;;
-    grey | gry)
-        color="\033[47m\033[100m" # Grey with white text
-    ;;
-    red)
-        color="\033[41m\033[97m" # Red with white text
-    ;;
-    darkred | dred)
-        color="\033[48;5;52m\033[97m" # Dark red with white text
-    ;;
-    green | grn)
-        color="\033[42m\033[97m" # Green with white text
-    ;;
-    blue | blu)
-        color="\033[44m\033[97m" # Blue with white text
-    ;;
-    yellow | yel)
-        color="\033[42m\033[97m" # Yellow with white text
-    ;;
-    orange | org)
-        color="\033[48;5;202m\033[97m" # OrNGE with white text
-    ;;
-    olive | olv)
-        color="\033[48;5;58m\033[97m" # Yellow with white text
-    ;;
-    magenta | mag)
-        color="\033[45m\033[97m" # Magenta with white text
-    ;;
-    purple | pur)
-        color="\033[48;5;53m" # Purple with white text
-    ;;
-    cyan | cyn)
-        color="\033[46m\033[97m" # Cyan with white text
-    ;;
-    *)
-        color="\033[45m\033[97m" # Magenta with white text
-    ;;
-    esac
-    
-    # Get the lenghth of text string
-    # Divide 74 by the length.
-    # Divide it in half.
-    n=${#text}
-    l=$(( length - n  )) 
+
+    # Width of the terminal
+    twidth=$(tput cols) 
+    # Length of the header string
+    hlength=${#text}
+
+    # Set a minimum with for the background
+    if [ ! $twidth -gt $hlength ]; then
+        twidth=$hlength
+    fi
+
+    # Subtract header string from terminal width
+    # Divide that number in half. This becomes
+    # the padding on either side of the header
+    l=$(( twidth - hlength )) 
     d=$(( l / 2 ))
 
     declare padding
     for i in $(seq 1 ${d}); do padding+=" "; done;
 
+    # Depending on the length of the terminal relative to the length
+    # of the heading text we might end up one character off in our length. 
+    # To compensate we add a one space to the right padding.
+    padl=$padding
+    padr=$padding
+    plen=${#padding}
+    nlength=$(( plen * 2 + hlength ))
+    if [ $twidth -ne $nlength ]; then
+        padr+=" ";
+    fi
+
+    case "$color" in
+    grey | gry)
+        color="\033[48;5;240m\033[97m"
+    ;;
+    charcoal | chr)
+        color="\033[48;5;237m\033[97m"
+    ;;
+    red)
+        color="\033[48;5;1m\033[97m"
+    ;;
+    green | grn)
+        color="\033[48;5;22m\033[97m"
+    ;;
+    olive | olv)
+        color="\033[48;5;58m\033[97m"
+    ;;
+    blue | blu)
+        color="\033[44m\033[97m"
+    ;;
+    sky)
+        color="\033[48;5;25m\033[97m"
+    ;;
+    yellow | yel)
+        color="\033[42m\033[97m"
+    ;;
+    coral| crl)
+        color="\033[48;5;3m\033[97m"
+    ;;
+    orange | org)
+        color="\033[48;5;202m\033[97m"
+    ;;
+    magenta | mag)
+        color="\033[45m\033[97m"
+    ;;
+    purple | pur)
+        color="\033[48;5;53m"
+    ;;
+    cyan | cyn)
+        color="\033[46m\033[97m"
+    ;;
+    *)
+        color="\033[45m\033[97m"
+    ;;
+    esac
     echo
-    echo -e "${color}${padding}${text}${padding}${reset}"
+    echo -e "${color}${padl}${text}${padr}${reset}"
     echo
 }
 
@@ -155,12 +179,25 @@ declare ACTIVECONS
 declare BASECON
 declare LISTCONS
 declare PROFILES
+declare CITY
+declare STATE
+declare TZ
+declare CTRY
+declare IP
 
 function _reset_connections() {
     ACTIVECONS=""
     BASECON=""
     LISTCONS=""
     PROFILES=""
+}
+
+function _reset_geolocation() {
+    IP=""
+    CITY=""
+    STATE=""
+    TZ=""
+    CTRY=""
 }
 
 function _load_connections() {
@@ -370,6 +407,7 @@ function _wifi_connect() {
         fi
     fi
 
+    _reset_geolocation
     _geolocation
     _submenu
 }
@@ -397,7 +435,8 @@ function _wifi_disconnect() {
 # Disconnects fom wifi without showing a message
 function _wifi_quiet_disconnect() {
     if [ ! -z "${ACTIVECONS}" ]; then
-        nmcli -t con down id "$BASECON" >/dev/null 2>&1 
+        nmcli -t con down id "$BASECON" >/dev/null 2>&1
+        _reset_geolocation
         _reset_connections
     fi
 }
@@ -483,6 +522,7 @@ function _vpn_connect() {
                     echo -e "  ${RED}ERROR: UNABLE TO CONNECT TO: ${RST}${YEL}${PROFILE_NAME}${RST}"
                 fi
 
+                _reset_geolocation
                 _geolocation
                 _submenu
                 exit 1
@@ -521,6 +561,7 @@ function _vpn_connect() {
         if [ "$server" == "" ]; then
             echo
             echo -e "  ${RED}ERROR: Server query returned no results.${RST}"
+            echo
             echo -e "  ${YEL}Tip: Set a higher load percentage in the script variables.${RST}"
             _submenu
             exit 1
@@ -581,6 +622,7 @@ function _vpn_connect() {
         echo
         nmcli con up id "${PROFILE_NAME}" >/dev/null 2>&1 
 
+        _reset_geolocation
         _geolocation
         _submenu
     fi
@@ -598,7 +640,8 @@ function _vpn_disconnect() {
     if [ -z "${ACTIVECONS}" ] || ! echo "$ACTIVECONS" | egrep -q "(^|\s)${PROFILE_NAME}($|\s)"; then
         echo -e " ${YEL}You are not connected to a VPN${RST}"
     else
-        nmcli -t con down id "${PROFILE_NAME}" >/dev/null 2>&1 
+        nmcli -t con down id "${PROFILE_NAME}" >/dev/null 2>&1
+        _reset_geolocation
         echo -e " ${YEL}You have been disconnected from ${PROFILE_NAME}${RST}"
     fi
 
@@ -616,20 +659,35 @@ function _geolocation() {
     if [ -z "${ACTIVECONS}" ]; then
         echo -e " ${YEL}Geolocation data not available${RST}"
     else
-            
-        IP=$(curl -slent ipinfo.io/ip)        
-        IPDATA=$(curl -slent freegeoip.net/json/${IP})
+        
+        if [ -z "$IP" ]; then
 
-        city=$(echo $IPDATA | jq -r .city) >/dev/null 2>&1 
-        state=$(echo $IPDATA | jq -r .region_name) >/dev/null 2>&1 
-        tz=$(echo $IPDATA | jq -r .time_zone) >/dev/null 2>&1 
-        CTRY=$(echo $IPDATA | jq -r .country_name) >/dev/null 2>&1 
+            IP=$(curl -slent ${IPLOOKUP_URL})        
+            IPDATA=$(curl -slent ${GEOLOOKUP_URL}${IP})
+
+            CITY=$(echo $IPDATA | jq -r .city) >/dev/null 2>&1 
+            STATE=$(echo $IPDATA | jq -r .region_name) >/dev/null 2>&1 
+            TZ=$(echo $IPDATA | jq -r .time_zone) >/dev/null 2>&1 
+            CTRY=$(echo $IPDATA | jq -r .country_name) >/dev/null 2>&1 
+
+            if [ -z "$TZ" ]; then
+                TZ="n/a"
+            fi
+            if [ -z "$CTRY" ]; then
+                CTRY="n/a"
+            fi
+        fi
 
         echo -e " IP address: ${CYN}${IP}${RST}"
         echo
-        echo -e " Location:   ${YEL}${city} ${state} ${CTRY}${RST}"
+
+        if [ -z "$CITY" ]; then 
+            echo -e " Location:   ${YEL}${CTRY}${RST}"
+        else
+            echo -e " Location:   ${YEL}${CITY} ${STATE} ${CTRY}${RST}"
+        fi
         echo
-        echo -e " Timezone:   ${BLU}${tz}${RST}"
+        echo -e " Timezone:   ${BLU}${TZ}${RST}"
     fi
 }
 
@@ -743,7 +801,8 @@ function _show_interface_status() {
 
 function _turn_wifi_on() {
     _heading purple "WIFI INTERFACE ON"
-    nmcli radio wifi on 
+    nmcli radio wifi on
+    _reset_geolocation
     echo
     echo -e "  ${GRN}Wifi Interface has been turned on${RST}"
     _util_submenu
@@ -754,6 +813,7 @@ function _turn_wifi_on() {
 function _turn_wifi_off() {
     _heading purple "WIFI INTERFACE OFF"
     nmcli radio wifi off
+    _reset_geolocation
     echo
     echo -e "  ${RED}Wifi Interface has been turned off${RST}"
     _util_submenu
@@ -764,6 +824,7 @@ function _turn_wifi_off() {
 function _turn_network_on() {
     _heading purple "NETWORK INTERFACE OFF"
     nmcli networking on
+    _reset_geolocation
     echo
     echo -e "  ${GRN}Network Interface has been turned on${RST}"
     _util_submenu
@@ -774,6 +835,7 @@ function _turn_network_on() {
 function _turn_network_off() {
     _heading purple "NETWORK INTERFACE ON"
     nmcli networking off
+    _reset_geolocation
     echo
     echo -e "  ${RED}Network Interface has been turned off${RST}"
     _util_submenu
@@ -823,6 +885,7 @@ function _delete_profile() {
 
     echo
     nmcli con delete id "$SELECTION"
+    _reset_geolocation
     _util_submenu
 }
 
