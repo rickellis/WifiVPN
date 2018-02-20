@@ -3,7 +3,7 @@ Wifi and Nord VPN connecting script using Network Manager Command Line Interface
 
 WifiVPN allows a variety of Wifi related actions (connect, disconnect, profile management, network status, etc.), as well as the ability to automatically download the most current Nord server data, select the fastest one, and connect to it. It also shows geolocation data, informing you what city, state and timezone your connection is running through.
 
-<img src="https://i.imgur.com/8pU2y3b.png" />
+<img src="https://i.imgur.com/W4BgHYF.png" />
 
 
 ## Requirements
