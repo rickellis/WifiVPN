@@ -68,6 +68,8 @@ For convenience you can add the following function to your .bashrc file, which w
 
 Written by __[Rick Ellis](http://rickellis.com/)__.
 
+The JSON parsing query written by __[Sean Ewing](https://github.com/strobilomyces/nordvpn-nm)__
+
 ## License
 
 MIT
