@@ -7,7 +7,7 @@
 #                     |_|        
 #
 #-----------------------------------------------------------------------------------
-VERSION="1.2.5"
+VERSION="1.2.6"
 #-----------------------------------------------------------------------------------
 #
 # Enables Wifi and Nord VPN connectivity using Network Manager Command Line Interface.
@@ -69,18 +69,85 @@ MAG="\033[95m"
 CYN="\033[96m"
 WHT="\033[97m"
 
-# Define background colors with white text
-BRED="\033[41m\033[97m"
-BBLU="\033[44m\033[97m"
-BGRN="\033[42m\033[97m"
-BMAG="\033[45m\033[97m"
-
 # Reset color
 RST="\033[0m"
 
 # Load the credentials file
 # Note: . is a synonym for source, but more portable
 . "${BASEPATH}/${CREDENTIALS}"
+
+# ------------------------------------------------------------------------------
+
+# Generates heading with a background color and white text, centered.
+function _heading() {
+
+    if [ -z "$1" ] || [ -z "$2" ]; then
+        echo 'Usage: heading <color> "My cool heading"'
+        exit 1
+    fi
+
+    color=${1}
+    color=${color,,} # Lowercase the color
+    text=${2}
+    length=74 # Overal length of heading
+    reset="\033[0m"
+    
+    case "$color" in
+    black | blk)
+        color="\033[40m\033[97m" # Black with white text
+    ;;
+    grey | gry)
+        color="\033[47m\033[100m" # Grey with white text
+    ;;
+    red)
+        color="\033[41m\033[97m" # Red with white text
+    ;;
+    darkred | dred)
+        color="\033[48;5;52m\033[97m" # Dark red with white text
+    ;;
+    green | grn)
+        color="\033[42m\033[97m" # Green with white text
+    ;;
+    blue | blu)
+        color="\033[44m\033[97m" # Blue with white text
+    ;;
+    yellow | yel)
+        color="\033[42m\033[97m" # Yellow with white text
+    ;;
+    orange | org)
+        color="\033[48;5;202m\033[97m" # OrNGE with white text
+    ;;
+    olive | olv)
+        color="\033[48;5;58m\033[97m" # Yellow with white text
+    ;;
+    magenta | mag)
+        color="\033[45m\033[97m" # Magenta with white text
+    ;;
+    purple | pur)
+        color="\033[48;5;53m" # Purple with white text
+    ;;
+    cyan | cyn)
+        color="\033[46m\033[97m" # Cyan with white text
+    ;;
+    *)
+        color="\033[45m\033[97m" # Magenta with white text
+    ;;
+    esac
+    
+    # Get the lenghth of text string
+    # Divide 74 by the length.
+    # Divide it in half.
+    n=${#text}
+    l=$(( length - n  )) 
+    d=$(( l / 2 ))
+
+    declare padding
+    for i in $(seq 1 ${d}); do padding+=" "; done;
+
+    echo
+    echo -e "${color}${padding}${text}${padding}${reset}"
+    echo
+}
 
 # ------------------------------------------------------------------------------
 
@@ -149,11 +216,8 @@ function _home_menu() {
     unset SELECTION
     _load_connections
 
+    _heading purple "WifiVPN VERSION ${VERSION}"
     echo
-    echo -e "${BMAG}${WHT}                        WifiVPN VERSION ${VERSION}                        ${RST}"
-    echo
-    echo
-
     _show_status_table
     
     if [ -z "${ACTIVECONS}" ]; then
@@ -162,18 +226,16 @@ function _home_menu() {
         echo -e "  You are connected to: ${GRN}${LISTCONS}${RST}"
     fi
 
-    echo
-    echo
-    echo -e "${BGRN}${WHT}  MENU                                                               ${RST}"
-    echo
+    _geolocation
+    _heading green "MENU"
+
     echo -e "  1) ${GRN}^${RST} Wifi Connect"
     echo -e "  2) ${RED}v${RST} Wifi Disconnect"
     echo 
     echo -e "  3) ${GRN}^${RST} VPN  Connect"
     echo -e "  4) ${RED}v${RST} VPN  Disconnect"
     echo
-    echo -e "  5) ${GRN}>${RST} Geolocation"
-    echo -e "  6) ${GRN}>${RST} Utilities"
+    echo -e "  5) ${GRN}>${RST} Utilities"
     echo
     echo -e "  X) ${YEL}<${RST} EXIT"
     echo
@@ -211,10 +273,6 @@ function _home_menu() {
     ;;
     5)
         clear
-        _geolocation
-    ;;
-    6)
-        clear
         _utilities
     ;;
     *)
@@ -229,9 +287,8 @@ function _home_menu() {
 function _wifi_connect() {
     unset NETWORK
 
-    echo
-    echo -e "${BMAG}${WHT}                              WIFI CONNECT                           ${RST}"
-    echo
+    _heading magenta "WIFI CONNECT"
+
     echo -e " ${GRN}Scanning networks${RST}"
     echo
     echo -e " ${YEL}Press \"q\" to show SELECTION prompt if not shown after network list${RST}"
@@ -300,11 +357,10 @@ function _wifi_connect() {
 
         # Create a new profile
         nmcli -t dev wifi con "${NETWORK}" password "${PASSWD}" name "${NETWORK}"
-        sleep 2
+        sleep 3
 
-        # Reload the connection variables
-        _load_connections
-        sleep 5
+        # Reset the connection variables
+        _reset_connections
 
         # Verify connection
         if echo "$PROFILES" | egrep -q "(^|\s)${NETWORK}($|\s)"; then
@@ -322,9 +378,8 @@ function _wifi_connect() {
 
 # Disconnect from the active wifi connection
 function _wifi_disconnect() {
-    echo
-    echo -e "${BRED}${WHT}                              WIFI DISCONNECT                        ${RST}"
-    echo
+
+    _heading red "WIFI DISCONNECT"
     echo 
 
     if [ -z "${ACTIVECONS}" ]; then
@@ -354,9 +409,7 @@ function _vpn_connect() {
     unset SELECTION
     unset VPN_PROFILE
 
-    echo
-    echo -e "${BMAG}${WHT}                              VPN CONNECT                            ${RST}"
-    echo
+    _heading blue "VPN CONNECT"
 
     if [ -z "${ACTIVECONS}" ]; then
         echo
@@ -449,6 +502,8 @@ function _vpn_connect() {
         echo 
 
         # Fetch the server data from Nord. JSON format.
+        # This curl/json query by Sean Ewing
+        # Project: https://github.com/strobilomyces/nordvpn-nm
         if [ -z "$COUNTRY_CODE" ]; then
             fastest=$(curl -s ${NORD_SERVER_DATA} | jq -r 'sort_by(.load) | .[] | select(.load < '${SERVER_LOAD}' and .features.openvpn_tcp == true ) | .domain')
         else
@@ -536,10 +591,7 @@ function _vpn_connect() {
 # Disconnect from the active VPN connection
 function _vpn_disconnect() {
    
-   # Show page heading
-    echo
-    echo -e "${BRED}${WHT}                             VPN DISCONNECT                          ${RST}"
-    echo
+    _heading red "VPN DISCONNECT"
     echo
 
     # If there are no active or VPN connections there is nothing to disconnect
@@ -558,15 +610,12 @@ function _vpn_disconnect() {
 # Display city, state, IP
 function _geolocation() {
 
-    echo
-    echo -e "${BMAG}${WHT}                              GEOLOCATION                            ${RST}"
-    echo
+    _load_connections
+    _heading blue "GEOLOCATION"
 
     if [ -z "${ACTIVECONS}" ]; then
-        echo -e " ${YEL}Geolocation requires an active wifi connection${RST}"
+        echo -e " ${YEL}Geolocation data not available${RST}"
     else
-        echo -e " ${GRN}Downloading geolocation data${RST}"
-        echo
             
         IP=$(curl -slent ipinfo.io/ip)        
         IPDATA=$(curl -slent freegeoip.net/json/${IP})
@@ -582,8 +631,6 @@ function _geolocation() {
         echo
         echo -e " Timezone:   ${BLU}${tz}${RST}"
     fi
-
-    _submenu
 }
 
 # ------------------------------------------------------------------------------
@@ -591,10 +638,7 @@ function _geolocation() {
 function _utilities() {
     unset SELECTION
 
-    # Show page heading
-    echo
-    echo -e "${BMAG}${WHT}                               UTILITIES                             ${RST}"
-    echo
+    _heading olive "UTILITIES"
 
     echo -e "  1) ${GRN}>${RST} Show Active Connections"
     echo -e "  2) ${GRN}>${RST} Show Network Interface Status"
@@ -682,9 +726,7 @@ function _utilities() {
 # ------------------------------------------------------------------------------
 
 function _show_active_cons() {
-    echo
-    echo -e "${BMAG}${WHT}                          ACTIVE CONNECTIONS                         ${RST}"
-    echo
+    _heading purple "ACTIVE CONNECTIONS"
     nmcli con show --active
     _util_submenu
 }
@@ -692,9 +734,7 @@ function _show_active_cons() {
 # ------------------------------------------------------------------------------
 
 function _show_interface_status() {
-    echo
-    echo -e "${BMAG}${WHT}                        NETWORK INTERFACE STATUS                     ${RST}"
-    echo
+    _heading purple "NETWORK INTERFACE STATUS"
     nmcli device status
     _util_submenu
 }
@@ -702,9 +742,7 @@ function _show_interface_status() {
 # ------------------------------------------------------------------------------
 
 function _turn_wifi_on() {
-    echo
-    echo -e "${BMAG}${WHT}                              WIFI STATUS                            ${RST}"
-    echo
+    _heading purple "WIFI INTERFACE ON"
     nmcli radio wifi on 
     echo
     echo -e "  ${GRN}Wifi Interface has been turned on${RST}"
@@ -714,9 +752,7 @@ function _turn_wifi_on() {
 # ------------------------------------------------------------------------------
 
 function _turn_wifi_off() {
-    echo
-    echo -e "${BMAG}${WHT}                              WIFI STATUS                            ${RST}"
-    echo
+    _heading purple "WIFI INTERFACE OFF"
     nmcli radio wifi off
     echo
     echo -e "  ${RED}Wifi Interface has been turned off${RST}"
@@ -726,9 +762,7 @@ function _turn_wifi_off() {
 # ------------------------------------------------------------------------------
 
 function _turn_network_on() {
-    echo
-    echo -e "${BMAG}${WHT}                             NETWORK STATUS                          ${RST}"
-    echo
+    _heading purple "NETWORK INTERFACE OFF"
     nmcli networking on
     echo
     echo -e "  ${GRN}Network Interface has been turned on${RST}"
@@ -738,9 +772,7 @@ function _turn_network_on() {
 # ------------------------------------------------------------------------------
 
 function _turn_network_off() {
-    echo
-    echo -e "${BMAG}${WHT}                             NETWORK STATUS                          ${RST}"
-    echo
+    _heading purple "NETWORK INTERFACE ON"
     nmcli networking off
     echo
     echo -e "  ${RED}Network Interface has been turned off${RST}"
@@ -750,9 +782,7 @@ function _turn_network_off() {
 # ------------------------------------------------------------------------------
 
 function _show_profiles() {
-    echo
-    echo -e "${BMAG}${WHT}                          ALL SAVED PROFILES                         ${RST}"
-    echo
+    _heading purple "SAVED PROFILES"
     nmcli con show
     _util_submenu
 }
@@ -761,10 +791,7 @@ function _show_profiles() {
 
 function _delete_profile() {
     unset SELECTION
-    echo
-    echo -e "${BMAG}${WHT}                            DELETE PROFILE                           ${RST}"
-    echo
-    
+    _heading purple "DELETE PROFILE"
     nmcli con show
 
     echo
@@ -806,10 +833,7 @@ function _submenu(){
     unset SELECTION
 
     echo
-    echo
-    echo -e "${BGRN}${WHT}  MENU                                                               ${RST}"
-    echo
-
+    _heading green "MENU"
     echo -e "  M) ${YEL}^${RST} MAIN MENU"
     echo -e "  X) ${YEL}<${RST} EXIT"
     echo
@@ -840,9 +864,7 @@ function _util_submenu(){
     unset SELECTION
 
     echo
-    echo
-    echo -e "${BGRN}${WHT}  MENU                                                               ${RST}"
-    echo
+    _heading green "MENU"
     echo -e "  M) ${YEL}^${RST} MAIN MENU"
     echo -e "  U) ${YEL}^${RST} UTILITIES"
     echo -e "  X) ${YEL}<${RST} EXIT"
