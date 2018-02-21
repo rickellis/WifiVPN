@@ -7,7 +7,7 @@
 #                     |_|        
 #
 #-----------------------------------------------------------------------------------
-VERSION="1.3.0"
+VERSION="1.3.1"
 #-----------------------------------------------------------------------------------
 #
 # Enables Wifi and Nord VPN connectivity using Network Manager Command Line Interface.
@@ -16,13 +16,13 @@ VERSION="1.3.0"
 #
 #-----------------------------------------------------------------------------------
 # Author:   Rick Ellis
-# URL:      https://github.com/rickellis/Wifi
+# URL:      https://github.com/rickellis/WifiVPN
 # License:  MIT
 #-----------------------------------------------------------------------------------
 
 # Use only servers from a particular country.
 # Use 2 letter country code: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
-# For all countries leave blank
+# To select the fastest server regardless of country leave blank.
 COUNTRY_CODE="US"
 
 # Return servers with a load of less than X percent.
@@ -72,9 +72,7 @@ YEL="\033[93m"
 MAG="\033[95m"
 CYN="\033[96m"
 WHT="\033[97m"
-
-# Reset color
-RST="\033[0m"
+RST="\033[0m" # Reset color
 
 # Load the credentials file
 # Note: . is a synonym for source, but more portable
@@ -82,94 +80,99 @@ RST="\033[0m"
 
 # ------------------------------------------------------------------------------
 
-# Generates heading with a background color and white text, centered.
-function _heading() {
+# Shell Heading Generator, from my script library
+# https://github.com/rickellis/Shell-Scripts/blob/master/sheading.sh
+sheading() {
+
     if [ -z "$1" ] || [ -z "$2" ]; then
-        echo 'Usage: heading <color> "My cool heading"'
+        echo 'Usage: heading <color> "Heading Text"'
         exit 1
     fi
 
-    color=${1}
-    color=${color,,} # Lowercase the color
-    text=${2}
-    reset="\033[0m"
+    color=${1,,}        # lowercase
+    hding=${2}          # Capture heading
+    hdlen=${#hding}     # heading length
+    twidt=$(tput cols)  # terminal width
 
-    # Width of the terminal
-    twidth=$(tput cols) 
-    # Length of the header string
-    hlength=${#text}
-
-    # Set a minimum with for the background
-    if [ ! $twidth -gt $hlength ]; then
-        twidth=$hlength
+    # Set the minimum width to match length of the heading
+    if [ ! $twidt -gt $hdlen ]; then
+        twidt=$hdlen
     fi
 
-    # Subtract header string from terminal width
-    # Divide that number in half. This becomes
-    # the padding on either side of the header
-    l=$(( twidth - hlength )) 
+    # Calculate the padding necessary on either side of the heading
+    l=$(( twidt - hdlen )) 
     d=$(( l / 2 ))
 
-    declare padding
-    for i in $(seq 1 ${d}); do padding+=" "; done;
+    padding=""
+    for i in $(seq 1 ${d}); do 
+        padding+=" "
+    done
 
-    # Depending on the length of the terminal relative to the length
-    # of the heading text we might end up one character off in our length. 
-    # To compensate we add a one space to the right padding.
-    padl=$padding
-    padr=$padding
-    plen=${#padding}
-    nlength=$(( plen * 2 + hlength ))
-    if [ $twidth -ne $nlength ]; then
-        padr+=" ";
+    # Thanks to Bash's auto-rounding, depending on the length of the
+    # terminal relative to the length of the heading we might end up
+    # one character off. To compensate we add one space if necessary
+    padextra=""
+    padlenth=${#padding}
+    totlenth=$(( padlenth * 2 + hdlen ))
+    if [ $twidt -ne $totlenth ]; then
+        padextra=" ";
     fi
 
+    # Random color generator
+    if [ "$color" == 'rnd' ] || [ "$color" == "rand" ] || [ "$color" == "random" ]; then
+        colors=(   
+                    "gry" 
+                    "chr"
+                    "red"
+                    "grn"
+                    "lim"
+                    "aqm"
+                    "olv"
+                    "blu"
+                    "sky"
+                    "cyn"
+                    "aqa"
+                    "gdr"
+                    "yel"
+                    "crl"
+                    "org"
+                    "pnk"
+                    "lav"
+                    "mag" 
+                    "pur"
+                )
+
+        color=${colors[$RANDOM % ${#colors[@]}]}
+    fi
+
+    # White text: \e[97m
+    # Black text: \e[38;5;232m
+
     case "$color" in
-    grey | gry)
-        color="\033[48;5;240m\033[97m"
-    ;;
-    charcoal | chr)
-        color="\033[48;5;237m\033[97m"
-    ;;
-    red)
-        color="\033[48;5;1m\033[97m"
-    ;;
-    green | grn)
-        color="\033[48;5;22m\033[97m"
-    ;;
-    olive | olv)
-        color="\033[48;5;58m\033[97m"
-    ;;
-    blue | blu)
-        color="\033[44m\033[97m"
-    ;;
-    sky)
-        color="\033[48;5;25m\033[97m"
-    ;;
-    yellow | yel)
-        color="\033[42m\033[97m"
-    ;;
-    coral| crl)
-        color="\033[48;5;3m\033[97m"
-    ;;
-    orange | org)
-        color="\033[48;5;202m\033[97m"
-    ;;
-    magenta | mag)
-        color="\033[45m\033[97m"
-    ;;
-    purple | pur)
-        color="\033[48;5;53m"
-    ;;
-    cyan | cyn)
-        color="\033[46m\033[97m"
-    ;;
-    *)
-        color="\033[45m\033[97m"
-    ;;
+        grey | gry)         color="\e[48;5;240m\e[97m"            ;;
+        charcoal | chr)     color="\e[48;5;237m\e[97m"            ;;
+        red)                color="\e[48;5;1m\e[97m"              ;;
+        green | grn)        color="\e[48;5;22m\e[97m"             ;;
+        lime | lim)         color="\e[48;5;40m\e[38;5;232m"       ;;
+        aquamarine | aqm)   color="\e[48;5;120m\e[38;5;232m"      ;;
+        olive | olv)        color="\e[48;5;58m\e[97m"             ;;
+        blue | blu)         color="\e[44m\e[97m"                  ;;
+        sky)                color="\e[48;5;25m\e[97m"             ;;
+        cyan | cyn)         color="\e[46m\e[97m"                  ;;
+        aqua | aqa)         color="\e[48;5;87m\e[38;5;232m"       ;;
+        goldenrod | gdr)    color="\e[48;5;220m\e[38;5;232m"      ;;
+        yellow | yel)       color="\e[48;5;11m\e[38;5;232m"       ;;
+        coral| crl)         color="\e[48;5;3m\e[97m"              ;;
+        orange | org)       color="\e[48;5;202m\e[97m"            ;;
+        pink | pnk)         color="\e[48;5;200m\e[97m"            ;;
+        lavender | lav)     color="\e[48;5;141m\e[38;5;232m"      ;;
+        magenta | mag)      color="\e[45m\e[97m"                  ;;
+        purple | pur)       color="\e[48;5;53m\e[97m"             ;;
+        *)                  color="\e[48;5;237m\e[97m"            ;;
     esac
+
     echo
-    echo -e "${color}${padl}${text}${padr}${reset}"
+    echo -e "${color}${padding}${hding}${padding}${padextra}\e[0m"
     echo
 }
 
@@ -253,7 +256,7 @@ function _home_menu() {
     unset SELECTION
     _load_connections
 
-    _heading purple "WifiVPN VERSION ${VERSION}"
+    sheading purple "WifiVPN VERSION ${VERSION}"
     echo
     _show_status_table
     
@@ -264,7 +267,7 @@ function _home_menu() {
     fi
 
     _geolocation
-    _heading green "MENU"
+    sheading green "MENU"
 
     echo -e "  1) ${GRN}^${RST} Wifi Connect"
     echo -e "  2) ${RED}v${RST} Wifi Disconnect"
@@ -285,7 +288,7 @@ function _home_menu() {
     fi
 
     # If they hit anything but a valid number we exit
-    if ! echo "$SELECTION" | egrep -q '^[1-6]+$'; then
+    if ! echo "$SELECTION" | egrep -q '^[1-9]+$'; then
         clear
         exit 1
     fi
@@ -324,7 +327,7 @@ function _home_menu() {
 function _wifi_connect() {
     unset NETWORK
 
-    _heading magenta "WIFI CONNECT"
+    sheading magenta "WIFI CONNECT"
 
     echo -e " ${GRN}Scanning networks${RST}"
     echo
@@ -417,7 +420,7 @@ function _wifi_connect() {
 # Disconnect from the active wifi connection
 function _wifi_disconnect() {
 
-    _heading red "WIFI DISCONNECT"
+    sheading red "WIFI DISCONNECT"
     echo 
 
     if [ -z "${ACTIVECONS}" ]; then
@@ -448,7 +451,7 @@ function _vpn_connect() {
     unset SELECTION
     unset VPN_PROFILE
 
-    _heading blue "VPN CONNECT"
+    sheading blue "VPN CONNECT"
 
     if [ -z "${ACTIVECONS}" ]; then
         echo
@@ -633,7 +636,7 @@ function _vpn_connect() {
 # Disconnect from the active VPN connection
 function _vpn_disconnect() {
    
-    _heading red "VPN DISCONNECT"
+    sheading red "VPN DISCONNECT"
     echo
 
     # If there are no active or VPN connections there is nothing to disconnect
@@ -654,7 +657,7 @@ function _vpn_disconnect() {
 function _geolocation() {
 
     _load_connections
-    _heading blue "GEOLOCATION"
+    sheading blue "GEOLOCATION"
 
     if [ -z "${ACTIVECONS}" ]; then
         echo -e " ${YEL}Geolocation data not available${RST}"
@@ -696,7 +699,7 @@ function _geolocation() {
 function _utilities() {
     unset SELECTION
 
-    _heading olive "UTILITIES"
+    sheading olive "UTILITIES"
 
     echo -e "  1) ${GRN}>${RST} Show Active Connections"
     echo -e "  2) ${GRN}>${RST} Show Network Interface Status"
@@ -784,7 +787,7 @@ function _utilities() {
 # ------------------------------------------------------------------------------
 
 function _show_active_cons() {
-    _heading purple "ACTIVE CONNECTIONS"
+    sheading purple "ACTIVE CONNECTIONS"
     nmcli con show --active
     _util_submenu
 }
@@ -792,7 +795,7 @@ function _show_active_cons() {
 # ------------------------------------------------------------------------------
 
 function _show_interface_status() {
-    _heading purple "NETWORK INTERFACE STATUS"
+    sheading purple "NETWORK INTERFACE STATUS"
     nmcli device status
     _util_submenu
 }
@@ -800,7 +803,7 @@ function _show_interface_status() {
 # ------------------------------------------------------------------------------
 
 function _turn_wifi_on() {
-    _heading purple "WIFI INTERFACE ON"
+    sheading purple "WIFI INTERFACE ON"
     nmcli radio wifi on
     _reset_geolocation
     echo
@@ -811,7 +814,7 @@ function _turn_wifi_on() {
 # ------------------------------------------------------------------------------
 
 function _turn_wifi_off() {
-    _heading purple "WIFI INTERFACE OFF"
+    sheading purple "WIFI INTERFACE OFF"
     nmcli radio wifi off
     _reset_geolocation
     echo
@@ -822,7 +825,7 @@ function _turn_wifi_off() {
 # ------------------------------------------------------------------------------
 
 function _turn_network_on() {
-    _heading purple "NETWORK INTERFACE OFF"
+    sheading purple "NETWORK INTERFACE OFF"
     nmcli networking on
     _reset_geolocation
     echo
@@ -833,7 +836,7 @@ function _turn_network_on() {
 # ------------------------------------------------------------------------------
 
 function _turn_network_off() {
-    _heading purple "NETWORK INTERFACE ON"
+    sheading purple "NETWORK INTERFACE ON"
     nmcli networking off
     _reset_geolocation
     echo
@@ -844,7 +847,7 @@ function _turn_network_off() {
 # ------------------------------------------------------------------------------
 
 function _show_profiles() {
-    _heading purple "SAVED PROFILES"
+    sheading purple "SAVED PROFILES"
     nmcli con show
     _util_submenu
 }
@@ -853,7 +856,7 @@ function _show_profiles() {
 
 function _delete_profile() {
     unset SELECTION
-    _heading purple "DELETE PROFILE"
+    sheading purple "DELETE PROFILE"
     nmcli con show
 
     echo
@@ -896,7 +899,7 @@ function _submenu(){
     unset SELECTION
 
     echo
-    _heading green "MENU"
+    sheading green "MENU"
     echo -e "  M) ${YEL}^${RST} MAIN MENU"
     echo -e "  X) ${YEL}<${RST} EXIT"
     echo
@@ -927,7 +930,7 @@ function _util_submenu(){
     unset SELECTION
 
     echo
-    _heading green "MENU"
+    sheading green "MENU"
     echo -e "  M) ${YEL}^${RST} MAIN MENU"
     echo -e "  U) ${YEL}^${RST} UTILITIES"
     echo -e "  X) ${YEL}<${RST} EXIT"
