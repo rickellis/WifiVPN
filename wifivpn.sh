@@ -7,7 +7,7 @@
 #                     |_|        
 #
 #-----------------------------------------------------------------------------------
-VERSION="1.3.1"
+VERSION="1.3.5"
 #-----------------------------------------------------------------------------------
 #
 # Enables Wifi and Nord VPN connectivity using Network Manager Command Line Interface.
@@ -37,6 +37,9 @@ CREDENTIALS="credentials.sh"
 
 # Nord API server dtata
 NORD_SERVER_DATA="https://nordvpn.com/api/server"
+
+# Nord VPN connection files
+NORD_CONNECTION_FILES="https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip"
 
 # Geolocation helper URLs
 GEOLOOKUP_URL="freegeoip.net/json/"
@@ -532,6 +535,24 @@ function _vpn_connect() {
             fi
         fi
 
+        if [ ! -d "${VPN_SERVERS}" ]; then
+            echo
+            echo -e "  ${RED}ERROR: VPN connection file directory doesn't exist"
+            echo
+            echo -e "  ${YEL}Before attempting to connect go to the UTILITIES page${RST}"
+            echo -e "  ${YEL}and download the VPN connection files.${RST}"
+            _submenu
+        fi
+
+        if [ -z "$(ls ${VPN_SERVERS})" ]; then
+            echo
+            echo -e "  ${RED}ERROR: No VPN connection files exist"
+            echo
+            echo -e "  ${YEL}Before attempting to connect go to the UTILITIES page${RST}"
+            echo -e "  ${YEL}and download the VPN connection files.${RST}"
+            _submenu
+        fi
+
         # Disconnect from the old profile if it exists
         if [ ! -z "${ACTIVECONS}" ] && echo "$ACTIVECONS" | egrep -q "(^|\s)${PROFILE_NAME}($|\s)"; then
             echo
@@ -713,6 +734,8 @@ function _utilities() {
     echo -e "  7) ${GRN}>${RST} Show Saved Profiles"
     echo -e "  8) ${RED}v${RST} Delete a Saved Profile"
     echo
+    echo -e "  9) ${CYN}v${RST} Download Nord VPN Connection Files"
+    echo
     echo -e "  M) ${YEL}^${RST} MAIN MENU"
     echo -e "  X) ${YEL}<${RST} EXIT"
     echo 
@@ -738,7 +761,7 @@ function _utilities() {
     fi
 
     # If they hit anything but a valid number we exit
-    if ! echo "$SELECTION" | egrep -q '^[1-8]+$'; then
+    if ! echo "$SELECTION" | egrep -q '^[1-9]+$'; then
         clear
         exit 1
     fi
@@ -777,6 +800,10 @@ function _utilities() {
     8)
         clear
         _delete_profile
+    ;;
+    9)
+        clear
+        _download_vpn_files
     ;;
     *)
         exit 1
@@ -890,6 +917,58 @@ function _delete_profile() {
     nmcli con delete id "$SELECTION"
     _reset_geolocation
     _util_submenu
+}
+
+# ------------------------------------------------------------------------------
+
+# Download the VPN connection files from Nord.com
+function _download_vpn_files() {
+
+    if [ ! -d "${VPN_SERVERS}" ]; then
+
+        echo 
+        echo -e "  ${GRN}Creating destination folder${RST}"
+
+        mkdir ${VPN_SERVERS}
+    else
+
+        echo 
+        echo -e "  ${RED}Deleting old VPN connection files${RST}"
+
+        rm ${VPN_SERVERS}/*
+        sleep 3
+    fi
+
+    echo 
+    echo -e "  ${GRN}Downloading Nord VPN connection files${RST}"
+
+    # wget is a little easier to work with so we use it
+    if command -v wget &>/dev/null; then
+        wget -q "${NORD_CONNECTION_FILES}" -P /tmp
+    else
+        curl -o -s /tmp/ovpn.zip "${NORD_CONNECTION_FILES}"
+    fi
+
+    echo 
+    echo -e "  ${GRN}Extracting archive${RST}"
+
+    unzip -q /tmp/ovpn.zip -d /tmp/
+
+    echo 
+    echo -e "  ${GRN}Copying files to: ${VPN_SERVERS}/${RST}"
+
+    cp -a "/tmp/ovpn_tcp/." "${VPN_SERVERS}"
+
+    sleep 3
+
+    rm /tmp/ovpn.zip
+    rm -r /tmp/ovpn_tcp
+    rm -r /tmp/ovpn_udp
+
+    echo 
+    echo -e "  ${GRN}Done!${RST}"
+
+    _util_submenu   
 }
 
 # ------------------------------------------------------------------------------
