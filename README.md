@@ -7,13 +7,7 @@ WifiVPN allows a variety of Wifi related actions (connect, disconnect, profile m
 
 
 ## Requirements
-A Linux installation with the following packages installed:
-
-    * Systemd
-    * NetworkManager
-    * WPA_Supplicant
-    * dhclient (for IPv6 support)
-    * Dialog
+A Linux installation running __NetworkManager__.
 
 ## Pre-Flight
 Before running WifiVPN do the following:
