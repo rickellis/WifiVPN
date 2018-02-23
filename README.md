@@ -18,16 +18,6 @@ A Linux installation with the following packages installed:
 ## Pre-Flight
 Before running WifiVPN do the following:
 
-### Download the Nord VPN server connection files:
-
-__https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip__
-
-Extract the zip and copy the files in the `ovpn_tcp` directory to the `vpn-servers` directory from this repo. You should end up with a directory structure that looks like this:
-
-    WifiVPN/vpn-servers/al1.nordvpn.com.tcp.ovpn
-    WifiVPN/vpn-servers/al2.nordvpn.com.tcp.ovpn
-    etc.
-
 ### Create credentials file
 
 Create a file named `credentials.sh` and place it in the `WifiVPN` folder. In that file, put your Nord VPN login credentials as follows:
@@ -38,12 +28,7 @@ Create a file named `credentials.sh` and place it in the `WifiVPN` folder. In th
     PASSWORD="your-password"
 
 ### Set country code
-Open `wifivpn.sh` and set the config variable at the top of the file for your desired country.
-
-### Make sure Network Manger is running
-
-    #   sudo systemctl enable NetworkManager.service
-    #   sudo systemctl start NetworkManager.service
+Open `wifivpn.sh` using a text editor and set the config variable at the top of the file for your desired country.
 
 ### Make WifiVPN executable
 
@@ -55,6 +40,8 @@ To use WifiVPN, launch your terminal and execute the script:
     #   ./wifivpn.sh
 
 You should then see an interface that looks like the screenshot above.
+
+__IMPORTANT!__ Before attempting to connect to a VPN server, go to the UTILITIES page (in the WifiVPN interface) and download the Nord VPN connection files.
 
 ## Terminal Shortcut
 For convenience you can add the following function to your .bashrc file, which will allow you to run WifiVPN by typing `wifivpn` rather than traversing to the directory and executing it.
