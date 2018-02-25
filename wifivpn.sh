@@ -29,7 +29,7 @@ COUNTRY_CODE="US"
 # DO NOT include percentage sign.
 SERVER_LOAD="10"
 
-# ADDITIONAL CONFIG VARIABLES. UNLIKELY THEY WILL NEED TO BE CHANGED ---------------
+# ADDITIONAL CONFIG VARIABLES. UNLIKELY THEY WILL NEED TO BE CHANGED
 
 # Name of the credentials file containing the Nord VPN username/password.
 # See README for mor information on creating this.
@@ -67,117 +67,25 @@ VPN_SERVERS_SFX=".tcp.ovpn"
 # disconnect, and delete the profile without needing a storage mechanism for the name.
 PROFILE_NAME="NordVPN"
 
-# Define text colors
-RED="\033[91m"
-GRN="\033[92m"
-BLU="\033[94m"
-YEL="\033[93m"
-MAG="\033[95m"
-CYN="\033[96m"
-WHT="\033[97m"
-RST="\033[0m" # Reset color
+# ------------------------------------------------------------------------------
 
 # Load the credentials file
-# Note: . is a synonym for source, but more portable
 . "${BASEPATH}/${CREDENTIALS}"
 
 # ------------------------------------------------------------------------------
 
-# Shell Heading Generator, from my script library
-# https://github.com/rickellis/Shell-Scripts/blob/master/sheading.sh
-sheading() {
-
-    if [ -z "$1" ] || [ -z "$2" ]; then
-        echo 'Usage: heading <color> "Heading Text"'
-        exit 1
-    fi
-
-    color=${1,,}        # lowercase
-    hding=${2}          # Capture heading
-    hdlen=${#hding}     # heading length
-    twidt=$(tput cols)  # terminal width
-
-    # Set the minimum width to match length of the heading
-    if [ ! $twidt -gt $hdlen ]; then
-        twidt=$hdlen
-    fi
-
-    # Calculate the padding necessary on either side of the heading
-    l=$(( twidt - hdlen )) 
-    d=$(( l / 2 ))
-
-    padding=""
-    for i in $(seq 1 ${d}); do 
-        padding+=" "
-    done
-
-    # Thanks to Bash's auto-rounding, depending on the length of the
-    # terminal relative to the length of the heading we might end up
-    # one character off. To compensate we add one space if necessary
-    padextra=""
-    padlenth=${#padding}
-    totlenth=$(( padlenth * 2 + hdlen ))
-    if [ $twidt -ne $totlenth ]; then
-        padextra=" ";
-    fi
-
-    # Random color generator
-    if [ "$color" == 'rnd' ] || [ "$color" == "rand" ] || [ "$color" == "random" ]; then
-        colors=(   
-                    "gry" 
-                    "chr"
-                    "red"
-                    "grn"
-                    "lim"
-                    "aqm"
-                    "olv"
-                    "blu"
-                    "sky"
-                    "cyn"
-                    "aqa"
-                    "gdr"
-                    "yel"
-                    "crl"
-                    "org"
-                    "pnk"
-                    "lav"
-                    "mag" 
-                    "pur"
-                )
-
-        color=${colors[$RANDOM % ${#colors[@]}]}
-    fi
-
-    # White text: \e[97m
-    # Black text: \e[38;5;232m
-
-    case "$color" in
-        grey | gry)         color="\e[48;5;240m\e[97m"            ;;
-        charcoal | chr)     color="\e[48;5;237m\e[97m"            ;;
-        red)                color="\e[48;5;1m\e[97m"              ;;
-        green | grn)        color="\e[48;5;22m\e[97m"             ;;
-        lime | lim)         color="\e[48;5;40m\e[38;5;232m"       ;;
-        aquamarine | aqm)   color="\e[48;5;120m\e[38;5;232m"      ;;
-        olive | olv)        color="\e[48;5;58m\e[97m"             ;;
-        blue | blu)         color="\e[44m\e[97m"                  ;;
-        sky)                color="\e[48;5;25m\e[97m"             ;;
-        cyan | cyn)         color="\e[46m\e[97m"                  ;;
-        aqua | aqa)         color="\e[48;5;87m\e[38;5;232m"       ;;
-        goldenrod | gdr)    color="\e[48;5;220m\e[38;5;232m"      ;;
-        yellow | yel)       color="\e[48;5;11m\e[38;5;232m"       ;;
-        coral| crl)         color="\e[48;5;3m\e[97m"              ;;
-        orange | org)       color="\e[48;5;202m\e[97m"            ;;
-        pink | pnk)         color="\e[48;5;200m\e[97m"            ;;
-        lavender | lav)     color="\e[48;5;141m\e[38;5;232m"      ;;
-        magenta | mag)      color="\e[45m\e[97m"                  ;;
-        purple | pur)       color="\e[48;5;53m\e[97m"             ;;
-        *)                  color="\e[48;5;237m\e[97m"            ;;
-    esac
-
-    echo
-    echo -e "${color}${padding}${hding}${padding}${padextra}\e[0m"
-    echo
-}
+# Load colors script to display pretty headings and colored text
+# This is an optional (but recommended) dependency
+if [ -f "colors.sh" ]; then
+    . colors.sh
+else
+    heading() {
+        echo " ----------------------------------------------------------------------"
+        echo " $2"
+        echo " ----------------------------------------------------------------------"
+        echo
+    }
+fi
 
 # ------------------------------------------------------------------------------
 
@@ -237,16 +145,16 @@ function _show_status_table() {
     # It also lets us colorize the output with better colors than the default.
     STATUS="${STATUS//$'\n'/$'\012'\ \ }"
     STATUS="${STATUS//disconnected/foobar}" # Prevents "connected" from getting replaced
-    STATUS="${STATUS//connected/${GRN}Connected${RST}}"
-    STATUS="${STATUS//foobar/${RED}Disconnected${RST}}"
-    STATUS="${STATUS//full/${GRN}Full${RST}}"
-    STATUS="${STATUS//enabled/${GRN}Enabled${RST}}"
-    STATUS="${STATUS//disabled/${RED}Disabled${RST}}"
-    STATUS="${STATUS//none/${RED}None${RST}}"
-    STATUS="${STATUS//limited/${YEL}Limited${RST}}"
-    STATUS="${STATUS//asleep/${YEL}Asleep${RST}}"
-    STATUS="${STATUS//(site only)/${YEL}(Wifi Only)${RST}}"
-    STATUS="${STATUS//unknown/${MAG}Unknown${RST}}"
+    STATUS="${STATUS//connected/${green}Connected${reset}}"
+    STATUS="${STATUS//foobar/${red}Disconnected${reset}}"
+    STATUS="${STATUS//full/${green}Full${reset}}"
+    STATUS="${STATUS//enabled/${green}Enabled${reset}}"
+    STATUS="${STATUS//disabled/${red}Disabled${reset}}"
+    STATUS="${STATUS//none/${red}None${reset}}"
+    STATUS="${STATUS//limited/${yellow}Limited${reset}}"
+    STATUS="${STATUS//asleep/${yellow}Asleep${reset}}"
+    STATUS="${STATUS//(site only)/${yellow}(Wifi Only)${reset}}"
+    STATUS="${STATUS//unknown/${magenta}Unknown${reset}}"
     echo -e "  ${STATUS}"
     echo 
 }
@@ -259,28 +167,28 @@ function _home_menu() {
     unset SELECTION
     _load_connections
 
-    sheading purple "WifiVPN VERSION ${VERSION}"
+    heading purple "WifiVPN VERSION ${VERSION}"
     echo
     _show_status_table
     
     if [ -z "${ACTIVECONS}" ]; then
         echo -e "  You are not connected to a network"
     else
-        echo -e "  You are connected to: ${GRN}${LISTCONS}${RST}"
+        echo -e "  You are connected to: ${green}${LISTCONS}${reset}"
     fi
 
     _geolocation
-    sheading green "MENU"
+    heading green "MENU"
 
-    echo -e "  1) ${GRN}^${RST} Wifi Connect"
-    echo -e "  2) ${RED}v${RST} Wifi Disconnect"
+    echo -e "  1) ${green}^${reset} Wifi Connect"
+    echo -e "  2) ${red}v${reset} Wifi Disconnect"
     echo 
-    echo -e "  3) ${GRN}^${RST} VPN  Connect"
-    echo -e "  4) ${RED}v${RST} VPN  Disconnect"
+    echo -e "  3) ${green}^${reset} VPN  Connect"
+    echo -e "  4) ${red}v${reset} VPN  Disconnect"
     echo
-    echo -e "  5) ${GRN}>${RST} Utilities"
+    echo -e "  5) ${green}>${reset} Utilities"
     echo
-    echo -e "  X) ${YEL}<${RST} EXIT"
+    echo -e "  X) ${yellow}<${reset} EXIT"
     echo
     read -p "  ENTER SELECTION: " SELECTION
 
@@ -330,11 +238,11 @@ function _home_menu() {
 function _wifi_connect() {
     unset NETWORK
 
-    sheading magenta "WIFI CONNECT"
+    heading purple "WIFI CONNECT"
 
-    echo -e " ${GRN}Scanning networks${RST}"
+    echo -e " ${green}Scanning networks${reset}"
     echo
-    echo -e " ${YEL}Press \"q\" to show SELECTION prompt if not shown after network list${RST}"
+    echo -e " ${yellow}Press \"q\" to show SELECTION prompt if not shown after network list${reset}"
     echo
 
     # Rescan the network for a current list of hotspots
@@ -347,8 +255,8 @@ function _wifi_connect() {
     echo
     echo -e "  ENTER THE NAME OF A NETWORK TO CONNECT TO, OR"
     echo
-    echo -e "  M) ${YEL}^${RST} MAIN MENU"
-    echo -e "  X) ${YEL}<${RST} EXIT"
+    echo -e "  M) ${yellow}^${reset} MAIN MENU"
+    echo -e "  X) ${yellow}<${reset} EXIT"
     echo
     read -p "  ENTER SELECTION:  " NETWORK
 
@@ -376,7 +284,7 @@ function _wifi_connect() {
     # we use it. If it doesn't, we create it.
     if echo "$PROFILES" | egrep -q "(^|\s)${NETWORK}($|\s)"; then
         echo
-        echo -e "  ${GRN}Establishing a connection${RST}"
+        echo -e "  ${green}Establishing a connection${reset}"
         echo
 
         # Connect, but supress output so we can show our own messages
@@ -386,16 +294,16 @@ function _wifi_connect() {
         # Verify that we're connected to the new network
         NEWCONN=$(nmcli -t -f name con show --active)
         if [ -z "$NEWCONN" ]; then
-            echo -e "  ${RED}ERROR: UNABLE TO CONNECT TO: ${RST}${YEL}${NETWORK}${RST}"
+            echo -e "  ${red}ERROR: UNABLE TO CONNECT TO: ${reset}${yellow}${NETWORK}${reset}"
         else
-            echo -e "  ${GRN}SUCCESS!${RST} CONNECTED TO: ${YEL}${NETWORK}${RST}"
+            echo -e "  ${green}SUCCESS!${reset} CONNECTED TO: ${yellow}${NETWORK}${reset}"
         fi
     else
 
         echo
         read -p "  ENTER PASSWORD (OR HIT ENTER TO LEAVE BLANK):  " PASSWD
         echo 
-        echo -e "  ${GRN}Establishing a connection${RST}"
+        echo -e "  ${green}Establishing a connection${reset}"
         echo
 
         # Create a new profile
@@ -407,9 +315,9 @@ function _wifi_connect() {
 
         # Verify connection
         if echo "$PROFILES" | egrep -q "(^|\s)${NETWORK}($|\s)"; then
-            echo -e "  ${GRN}SUCCESS!${RST} CONNECTED TO: ${YEL}${NETWORK}${RST}"
+            echo -e "  ${green}SUCCESS!${reset} CONNECTED TO: ${yellow}${NETWORK}${reset}"
         else
-            echo -e "  ${RED}ERROR:${RST} UNABLE TO CONNECT TO: ${YEL}${NETWORK}${RST}"
+            echo -e "  ${red}ERROR:${reset} UNABLE TO CONNECT TO: ${yellow}${NETWORK}${reset}"
         fi
     fi
 
@@ -423,13 +331,13 @@ function _wifi_connect() {
 # Disconnect from the active wifi connection
 function _wifi_disconnect() {
 
-    sheading red "WIFI DISCONNECT"
+    heading red "WIFI DISCONNECT"
     echo 
 
     if [ -z "${ACTIVECONS}" ]; then
-        echo -e " ${YEL}You are not connected to a wifi network${RST}"
+        echo -e " ${yellow}You are not connected to a wifi network${reset}"
     else
-        echo -e " ${YEL}You have been disconnected from ${BASECON}${RST}"
+        echo -e " ${yellow}You have been disconnected from ${BASECON}${reset}"
         _wifi_quiet_disconnect
     fi
 
@@ -454,13 +362,13 @@ function _vpn_connect() {
     unset SELECTION
     unset VPN_PROFILE
 
-    sheading blue "VPN CONNECT"
+    heading blue "VPN CONNECT"
 
     if [ -z "${ACTIVECONS}" ]; then
         echo
-        echo -e " ${YEL}You are not connected to a wifi network.${RST}"
+        echo -e " ${yellow}You are not connected to a wifi network.${reset}"
         echo
-        echo -e " ${YEL}Before connecting to Nord VPN you must first be connected to wifi.${RST}"
+        echo -e " ${yellow}Before connecting to Nord VPN you must first be connected to wifi.${reset}"
         echo
         _submenu        
     else
@@ -473,15 +381,15 @@ function _vpn_connect() {
 
         echo -e "  MENU OPTIONS"
         echo
-        echo -e "  N) ${GRN}^${RST} CONNECT TO THE FASTEST SERVER" 
+        echo -e "  N) ${green}^${reset} CONNECT TO THE FASTEST SERVER" 
 
         if [ "${VPN_PROFILE}" == "y" ]; then
-            echo -e "  L) ${GRN}^${RST} CONNECT TO LAST USED PROFILE" 
+            echo -e "  L) ${green}^${reset} CONNECT TO LAST USED PROFILE" 
         fi
 
         echo
-        echo -e "  M) ${YEL}^${RST} MAIN MENU"
-        echo -e "  X) ${YEL}<${RST} EXIT"
+        echo -e "  M) ${yellow}^${reset} MAIN MENU"
+        echo -e "  X) ${yellow}<${reset} EXIT"
         echo
         read -p "  ENTER SELECTION:  " SELECTION
 
@@ -507,12 +415,12 @@ function _vpn_connect() {
         # If they hit "L" we use the last profile
         if [ "$SELECTION" == 'l' ] || [ "$SELECTION" == 'L' ]; then
             if [ "${VPN_PROFILE}" == "n" ]; then
-                echo -e "  ${RED}INVALID OPTION: ${RST} there are no saved profiles. Aborting..." 
+                echo -e "  ${red}INVALID OPTION: ${reset} there are no saved profiles. Aborting..." 
                 clear
                 exit 1
             else
                 echo
-                echo -e "  ${GRN}Establishing a connection${RST}"
+                echo -e "  ${green}Establishing a connection${reset}"
                 echo
 
                 # Connect, but supress output so we can show our own messages
@@ -523,9 +431,9 @@ function _vpn_connect() {
                 _load_connections
 
                 if echo "$PROFILES" | egrep -q "(^|\s)${PROFILE_NAME}($|\s)"; then
-                    echo -e "  ${GRN}SUCCESS! CONNECTED TO: ${RST}${YEL}${PROFILE_NAME}${RST}"
+                    echo -e "  ${green}SUCCESS! CONNECTED TO: ${reset}${yellow}${PROFILE_NAME}${reset}"
                 else
-                    echo -e "  ${RED}ERROR: UNABLE TO CONNECT TO: ${RST}${YEL}${PROFILE_NAME}${RST}"
+                    echo -e "  ${red}ERROR: UNABLE TO CONNECT TO: ${reset}${yellow}${PROFILE_NAME}${reset}"
                 fi
 
                 _reset_geolocation
@@ -537,32 +445,32 @@ function _vpn_connect() {
 
         if [ ! -d "${VPN_SERVERS}" ]; then
             echo
-            echo -e "  ${RED}ERROR: VPN connection file directory doesn't exist"
+            echo -e "  ${red}ERROR: VPN connection file directory doesn't exist"
             echo
-            echo -e "  ${YEL}Before attempting to connect go to the UTILITIES page${RST}"
-            echo -e "  ${YEL}and download the VPN connection files.${RST}"
+            echo -e "  ${yellow}Before attempting to connect go to the UTILITIES page${reset}"
+            echo -e "  ${yellow}and download the VPN connection files.${reset}"
             _submenu
         fi
 
         if [ -z "$(ls ${VPN_SERVERS})" ]; then
             echo
-            echo -e "  ${RED}ERROR: No VPN connection files exist"
+            echo -e "  ${red}ERROR: No VPN connection files exist"
             echo
-            echo -e "  ${YEL}Before attempting to connect go to the UTILITIES page${RST}"
-            echo -e "  ${YEL}and download the VPN connection files.${RST}"
+            echo -e "  ${yellow}Before attempting to connect go to the UTILITIES page${reset}"
+            echo -e "  ${yellow}and download the VPN connection files.${reset}"
             _submenu
         fi
 
         # Disconnect from the old profile if it exists
         if [ ! -z "${ACTIVECONS}" ] && echo "$ACTIVECONS" | egrep -q "(^|\s)${PROFILE_NAME}($|\s)"; then
             echo
-            echo -e "  ${RED}Disconnecting active VPN${RST}"
+            echo -e "  ${red}Disconnecting active VPN${reset}"
             nmcli -t con down id "${PROFILE_NAME}" >/dev/null 2>&1
             sleep 2 
         fi
 
         echo 
-        echo -e "  ${GRN}Downloading Nord VPN server data${RST}"
+        echo -e "  ${green}Downloading Nord VPN server data${reset}"
         echo 
 
         # Fetch the server data from Nord. JSON format.
@@ -584,9 +492,9 @@ function _vpn_connect() {
         # No server returned?
         if [ "$server" == "" ]; then
             echo
-            echo -e "  ${RED}ERROR: Server query returned no results.${RST}"
+            echo -e "  ${red}ERROR: Server query returned no results.${reset}"
             echo
-            echo -e "  ${YEL}Tip: Set a higher load percentage in the script variables.${RST}"
+            echo -e "  ${yellow}Tip: Set a higher load percentage in the script variables.${reset}"
             _submenu
             exit 1
         fi
@@ -594,14 +502,14 @@ function _vpn_connect() {
         # Does the local version Nord VPN file exist?
         if [ ! -f "${VPN_SERVERS}/${server}${VPN_SERVERS_SFX}" ]; then
             echo
-            echo -e "  ${RED}ERROR:Unable to find the OVPN file:${RST}"
-            echo -e "  ${YEL}${VPN_SERVERS}/${server}${VPN_SERVERS_SFX}${RST}"
+            echo -e "  ${red}ERROR:Unable to find the OVPN file:${reset}"
+            echo -e "  ${yellow}${VPN_SERVERS}/${server}${VPN_SERVERS_SFX}${reset}"
             _submenu
             exit 1
         fi
 
         # A bit of housekeeping.
-        echo -e "  ${RED}Deleting old VPN profile${RST}"
+        echo -e "  ${red}Deleting old VPN profile${reset}"
         echo 
         nmcli con delete id "${PROFILE_NAME}" >/dev/null 2>&1 
         sleep 2
@@ -614,12 +522,12 @@ function _vpn_connect() {
         cp "${VPN_SERVERS}/${server}${VPN_SERVERS_SFX}" "${VPN_SERVERS}/${PROFILE_NAME}.ovpn"
 
         # Import the new profile
-        echo -e "  ${GRN}Importing new VPN profile${RST}"
+        echo -e "  ${green}Importing new VPN profile${reset}"
         echo 
         nmcli con import type openvpn file "${VPN_SERVERS}/${PROFILE_NAME}.ovpn" >/dev/null 2>&1 
         sleep 2
 
-        echo -e "  ${GRN}Configuring profile${RST}"
+        echo -e "  ${green}Configuring profile${reset}"
         echo 
 
         # Insert username into config file
@@ -635,14 +543,14 @@ function _vpn_connect() {
 
         # Reload the config file
         echo
-        echo -e "  ${GRN}Reloading config file${RST}"
+        echo -e "  ${green}Reloading config file${reset}"
         echo
         sudo nmcli connection reload "${PROFILE_NAME}"  >/dev/null 2>&1 
 
         # Delete the temp file
         rm "${VPN_SERVERS}/${PROFILE_NAME}.ovpn"
 
-        echo -e "  ${GRN}Connecting to ${server}${RST}"
+        echo -e "  ${green}Connecting to ${server}${reset}"
         echo
         nmcli con up id "${PROFILE_NAME}" >/dev/null 2>&1 
 
@@ -657,16 +565,16 @@ function _vpn_connect() {
 # Disconnect from the active VPN connection
 function _vpn_disconnect() {
    
-    sheading red "VPN DISCONNECT"
+    heading red "VPN DISCONNECT"
     echo
 
     # If there are no active or VPN connections there is nothing to disconnect
     if [ -z "${ACTIVECONS}" ] || ! echo "$ACTIVECONS" | egrep -q "(^|\s)${PROFILE_NAME}($|\s)"; then
-        echo -e " ${YEL}You are not connected to a VPN${RST}"
+        echo -e " ${yellow}You are not connected to a VPN${reset}"
     else
         nmcli -t con down id "${PROFILE_NAME}" >/dev/null 2>&1
         _reset_geolocation
-        echo -e " ${YEL}You have been disconnected from ${PROFILE_NAME}${RST}"
+        echo -e " ${yellow}You have been disconnected from ${PROFILE_NAME}${reset}"
     fi
 
     _submenu
@@ -678,10 +586,10 @@ function _vpn_disconnect() {
 function _geolocation() {
 
     _load_connections
-    sheading blue "GEOLOCATION"
+    heading blue "GEOLOCATION"
 
     if [ -z "${ACTIVECONS}" ]; then
-        echo -e " ${YEL}Geolocation data not available${RST}"
+        echo -e " ${yellow}Geolocation data not available${reset}"
     else
         
         if [ -z "$IP" ]; then
@@ -702,16 +610,16 @@ function _geolocation() {
             fi
         fi
 
-        echo -e " IP address: ${CYN}${IP}${RST}"
+        echo -e " IP address: ${cyan}${IP}${reset}"
         echo
 
         if [ -z "$CITY" ]; then 
-            echo -e " Location:   ${YEL}${CTRY}${RST}"
+            echo -e " Location:   ${yellow}${CTRY}${reset}"
         else
-            echo -e " Location:   ${YEL}${CITY} ${STATE} ${CTRY}${RST}"
+            echo -e " Location:   ${yellow}${CITY} ${STATE} ${CTRY}${reset}"
         fi
         echo
-        echo -e " Timezone:   ${BLU}${TZ}${RST}"
+        echo -e " Timezone:   ${blue}${TZ}${reset}"
     fi
 }
 
@@ -720,24 +628,24 @@ function _geolocation() {
 function _utilities() {
     unset SELECTION
 
-    sheading olive "UTILITIES"
+    heading olive "UTILITIES"
 
-    echo -e "  1) ${GRN}>${RST} Show Active Connections"
-    echo -e "  2) ${GRN}>${RST} Show Network Interface Status"
+    echo -e "  1) ${green}>${reset} Show Active Connections"
+    echo -e "  2) ${green}>${reset} Show Network Interface Status"
     echo
-    echo -e "  3) ${GRN}^${RST} Turn Wifi Interface On"
-    echo -e "  4) ${RED}v${RST} Turn Wifi Interface Off"
+    echo -e "  3) ${green}^${reset} Turn Wifi Interface On"
+    echo -e "  4) ${red}v${reset} Turn Wifi Interface Off"
     echo 
-    echo -e "  5) ${GRN}^${RST} Turn Network Interface On"
-    echo -e "  6) ${RED}v${RST} Turn Network Interface Off"
+    echo -e "  5) ${green}^${reset} Turn Network Interface On"
+    echo -e "  6) ${red}v${reset} Turn Network Interface Off"
     echo 
-    echo -e "  7) ${GRN}>${RST} Show Saved Profiles"
-    echo -e "  8) ${RED}v${RST} Delete a Saved Profile"
+    echo -e "  7) ${green}>${reset} Show Saved Profiles"
+    echo -e "  8) ${red}v${reset} Delete a Saved Profile"
     echo
-    echo -e "  9) ${CYN}v${RST} Download Nord VPN Connection Files"
+    echo -e "  9) ${cyan}v${reset} Download Nord VPN Connection Files"
     echo
-    echo -e "  M) ${YEL}^${RST} MAIN MENU"
-    echo -e "  X) ${YEL}<${RST} EXIT"
+    echo -e "  M) ${yellow}^${reset} MAIN MENU"
+    echo -e "  X) ${yellow}<${reset} EXIT"
     echo 
     read -p "  ENTER SELECTION:  " SELECTION
 
@@ -814,7 +722,7 @@ function _utilities() {
 # ------------------------------------------------------------------------------
 
 function _show_active_cons() {
-    sheading purple "ACTIVE CONNECTIONS"
+    heading purple "ACTIVE CONNECTIONS"
     nmcli con show --active
     _util_submenu
 }
@@ -822,7 +730,7 @@ function _show_active_cons() {
 # ------------------------------------------------------------------------------
 
 function _show_interface_status() {
-    sheading purple "NETWORK INTERFACE STATUS"
+    heading purple "NETWORK INTERFACE STATUS"
     nmcli device status
     _util_submenu
 }
@@ -830,51 +738,51 @@ function _show_interface_status() {
 # ------------------------------------------------------------------------------
 
 function _turn_wifi_on() {
-    sheading purple "WIFI INTERFACE ON"
+    heading purple "WIFI INTERFACE ON"
     nmcli radio wifi on
     _reset_geolocation
     echo
-    echo -e "  ${GRN}Wifi Interface has been turned on${RST}"
+    echo -e "  ${green}Wifi Interface has been turned on${reset}"
     _util_submenu
 }
 
 # ------------------------------------------------------------------------------
 
 function _turn_wifi_off() {
-    sheading purple "WIFI INTERFACE OFF"
+    heading purple "WIFI INTERFACE OFF"
     nmcli radio wifi off
     _reset_geolocation
     echo
-    echo -e "  ${RED}Wifi Interface has been turned off${RST}"
+    echo -e "  ${red}Wifi Interface has been turned off${reset}"
     _util_submenu
 }
 
 # ------------------------------------------------------------------------------
 
 function _turn_network_on() {
-    sheading purple "NETWORK INTERFACE OFF"
+    heading purple "NETWORK INTERFACE OFF"
     nmcli networking on
     _reset_geolocation
     echo
-    echo -e "  ${GRN}Network Interface has been turned on${RST}"
+    echo -e "  ${green}Network Interface has been turned on${reset}"
     _util_submenu
 }
 
 # ------------------------------------------------------------------------------
 
 function _turn_network_off() {
-    sheading purple "NETWORK INTERFACE ON"
+    heading purple "NETWORK INTERFACE ON"
     nmcli networking off
     _reset_geolocation
     echo
-    echo -e "  ${RED}Network Interface has been turned off${RST}"
+    echo -e "  ${red}Network Interface has been turned off${reset}"
     _util_submenu
 }
 
 # ------------------------------------------------------------------------------
 
 function _show_profiles() {
-    sheading purple "SAVED PROFILES"
+    heading purple "SAVED PROFILES"
     nmcli con show
     _util_submenu
 }
@@ -883,14 +791,14 @@ function _show_profiles() {
 
 function _delete_profile() {
     unset SELECTION
-    sheading purple "DELETE PROFILE"
+    heading purple "DELETE PROFILE"
     nmcli con show
 
     echo
     echo -e "  ENTER NAME OF THE PROFILE TO DELETE, OR"
     echo
-    echo -e "  M) ${YEL}^${RST} MAIN MENU"
-    echo -e "  X) ${YEL}<${RST} EXIT"
+    echo -e "  M) ${yellow}^${reset} MAIN MENU"
+    echo -e "  X) ${yellow}<${reset} EXIT"
     echo
     read -p "  ENTER SELECTION:  " SELECTION
 
@@ -927,20 +835,20 @@ function _download_vpn_files() {
     if [ ! -d "${VPN_SERVERS}" ]; then
 
         echo 
-        echo -e "  ${GRN}Creating destination folder${RST}"
+        echo -e "  ${green}Creating destination folder${reset}"
 
         mkdir ${VPN_SERVERS}
     else
 
         echo 
-        echo -e "  ${RED}Deleting old VPN connection files${RST}"
+        echo -e "  ${red}Deleting old VPN connection files${reset}"
 
         rm ${VPN_SERVERS}/*
         sleep 3
     fi
 
     echo 
-    echo -e "  ${GRN}Downloading Nord VPN connection files${RST}"
+    echo -e "  ${green}Downloading Nord VPN connection files${reset}"
 
     # wget is a little easier to work with so we use it
     if command -v wget &>/dev/null; then
@@ -950,12 +858,12 @@ function _download_vpn_files() {
     fi
 
     echo 
-    echo -e "  ${GRN}Extracting archive${RST}"
+    echo -e "  ${green}Extracting archive${reset}"
 
     unzip -q /tmp/ovpn.zip -d /tmp/
 
     echo 
-    echo -e "  ${GRN}Copying files to: ${VPN_SERVERS}/${RST}"
+    echo -e "  ${green}Copying files to: ${VPN_SERVERS}/${reset}"
 
     cp -a "/tmp/ovpn_tcp/." "${VPN_SERVERS}"
 
@@ -966,7 +874,7 @@ function _download_vpn_files() {
     rm -r /tmp/ovpn_udp
 
     echo 
-    echo -e "  ${GRN}Done!${RST}"
+    echo -e "  ${green}Done!${reset}"
 
     _util_submenu   
 }
@@ -978,9 +886,9 @@ function _submenu(){
     unset SELECTION
 
     echo
-    sheading green "MENU"
-    echo -e "  M) ${YEL}^${RST} MAIN MENU"
-    echo -e "  X) ${YEL}<${RST} EXIT"
+    heading green "MENU"
+    echo -e "  M) ${yellow}^${reset} MAIN MENU"
+    echo -e "  X) ${yellow}<${reset} EXIT"
     echo
     read -p "  ENTER SELECTION:  " SELECTION
 
@@ -1009,10 +917,10 @@ function _util_submenu(){
     unset SELECTION
 
     echo
-    sheading green "MENU"
-    echo -e "  M) ${YEL}^${RST} MAIN MENU"
-    echo -e "  U) ${YEL}^${RST} UTILITIES"
-    echo -e "  X) ${YEL}<${RST} EXIT"
+    heading green "MENU"
+    echo -e "  M) ${yellow}^${reset} MAIN MENU"
+    echo -e "  U) ${yellow}^${reset} UTILITIES"
+    echo -e "  X) ${yellow}<${reset} EXIT"
     echo 
     read -p "  ENTER SELECTION:  " SELECTION
 
