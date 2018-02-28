@@ -51,7 +51,7 @@ PROFILE_PATH="/etc/NetworkManager/system-connections"
 
 # Basepath to the directory containing the various assets.
 # This allows the basepath to be correct if this script gets aliased in .bashrc
-BASEPATH=$(dirname -- $(readlink -fn -- "$0"))
+BASEPATH=$(dirname -- "$0")
 
 # Path to folder containing NordVPN server config files
 VPN_SERVERS="${BASEPATH}/vpn-servers"
