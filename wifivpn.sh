@@ -70,14 +70,14 @@ PROFILE_NAME="NordVPN"
 # ------------------------------------------------------------------------------
 
 # Load the credentials file
-. "${BASEPATH}/${CREDENTIALS}"
+. ${BASEPATH}/${CREDENTIALS}
 
 # ------------------------------------------------------------------------------
 
 # Load colors script to display pretty headings and colored text
 # This is an optional (but recommended) dependency
-if [ -f "${BASEPATH}/colors.sh" ]; then
-    . "${BASEPATH}/colors.sh"
+if [ -f $BASEPATH/colors.sh ]; then
+    . $BASEPATH/colors.sh
 else
     heading() {
         echo " ----------------------------------------------------------------------"
