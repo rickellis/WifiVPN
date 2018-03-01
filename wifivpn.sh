@@ -7,7 +7,7 @@
 #                     |_|        
 #
 #-----------------------------------------------------------------------------------
-VERSION="1.3.5"
+VERSION="1.3.6"
 #-----------------------------------------------------------------------------------
 #
 # Enables Wifi and Nord VPN connectivity using Network Manager Command Line Interface.
@@ -51,7 +51,7 @@ PROFILE_PATH="/etc/NetworkManager/system-connections"
 
 # Basepath to the directory containing the various assets.
 # This allows the basepath to be correct if this script gets aliased in .bashrc
-BASEPATH=$(dirname -- "$0")
+BASEPATH=$(dirname "$0")
 
 # Path to folder containing NordVPN server config files
 VPN_SERVERS="${BASEPATH}/vpn-servers"
