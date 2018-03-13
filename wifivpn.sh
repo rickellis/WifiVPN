@@ -288,7 +288,7 @@ function _wifi_connect() {
         echo
 
         # Connect, but supress output so we can show our own messages
-        nmcli -t con up id "$NETWORK" >/dev/null 2>&1 
+        nmcli -t con up id "$NETWORK" >/dev/null 2>&1
         sleep 2
 
         # Verify that we're connected to the new network
