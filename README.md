@@ -7,7 +7,14 @@ WifiVPN allows a variety of Wifi related actions (connect, disconnect, profile m
 
 
 ## Requirements
-A Linux installation running __NetworkManager__.
+A Linux installation running the following packages:
+
+* networkmanager
+* openvpn
+* networkmanager-vpnc
+* dhclient
+* libsecret
+* gnome-keyring
 
 ## Pre-Flight
 Before running WifiVPN do the following:
