@@ -7,7 +7,7 @@
 #                     |_|        
 #
 #-----------------------------------------------------------------------------------
-VERSION="1.3.6"
+VERSION="1.3.7"
 #-----------------------------------------------------------------------------------
 #
 # Enables Wifi and Nord VPN connectivity using Network Manager Command Line Interface.
@@ -66,6 +66,9 @@ VPN_SERVERS_SFX=".tcp.ovpn"
 # selected and used, the profile is named the same. This allows us to connect,
 # disconnect, and delete the profile without needing a storage mechanism for the name.
 PROFILE_NAME="NordVPN"
+
+# Debug mode to show error messages. 1=on, 2=off
+DEBUG=0
 
 # ------------------------------------------------------------------------------
 
@@ -246,7 +249,11 @@ function _wifi_connect() {
     echo
 
     # Rescan the network for a current list of hotspots
-    nmcli -w 4 device wifi rescan >/dev/null 2>&1 
+    if [ $DEBUG -eq 1 ]; then
+        nmcli -w 4 device wifi rescan
+    else
+        nmcli -w 4 device wifi rescan >/dev/null 2>&1 
+    fi
     sleep 4
 
     # Generate a list of all available hotspots
@@ -288,7 +295,11 @@ function _wifi_connect() {
         echo
 
         # Connect, but supress output so we can show our own messages
-        nmcli -t con up id "$NETWORK" >/dev/null 2>&1
+        if [ $DEBUG -eq 1 ]; then
+            nmcli -t con up id "$NETWORK"
+        else
+            nmcli -t con up id "$NETWORK" >/dev/null 2>&1
+        fi
         sleep 2
 
         # Verify that we're connected to the new network
@@ -349,7 +360,11 @@ function _wifi_disconnect() {
 # Disconnects fom wifi without showing a message
 function _wifi_quiet_disconnect() {
     if [ ! -z "${ACTIVECONS}" ]; then
-        nmcli -t con down id "$BASECON" >/dev/null 2>&1
+        if [ $DEBUG -eq 1 ]; then
+            nmcli -t con down id "$BASECON"
+        else
+            nmcli -t con down id "$BASECON" >/dev/null 2>&1
+        fi
         _reset_geolocation
         _reset_connections
     fi
@@ -423,8 +438,12 @@ function _vpn_connect() {
                 echo -e "  ${green}Establishing a connection${reset}"
                 echo
 
-                # Connect, but supress output so we can show our own messages
-                nmcli -t con up id "$PROFILE_NAME" >/dev/null 2>&1 
+                # Connect
+                if [ $DEBUG -eq 1 ]; then
+                    nmcli -t con up id "$PROFILE_NAME"
+                else
+                    nmcli -t con up id "$PROFILE_NAME" >/dev/null 2>&1
+                fi
                 sleep 2
 
                 # Reload the connection variables
@@ -465,7 +484,11 @@ function _vpn_connect() {
         if [ ! -z "${ACTIVECONS}" ] && echo "$ACTIVECONS" | egrep -q "(^|\s)${PROFILE_NAME}($|\s)"; then
             echo
             echo -e "  ${red}Disconnecting active VPN${reset}"
-            nmcli -t con down id "${PROFILE_NAME}" >/dev/null 2>&1
+            if [ $DEBUG -eq 1 ]; then
+                nmcli -t con down id "${PROFILE_NAME}"
+            else
+                nmcli -t con down id "${PROFILE_NAME}" >/dev/null 2>&1
+            fi
             sleep 2 
         fi
 
@@ -510,8 +533,12 @@ function _vpn_connect() {
 
         # A bit of housekeeping.
         echo -e "  ${red}Deleting old VPN profile${reset}"
-        echo 
-        nmcli con delete id "${PROFILE_NAME}" >/dev/null 2>&1 
+        echo
+        if [ $DEBUG -eq 1 ]; then
+            nmcli con delete id "${PROFILE_NAME}"
+        else 
+            nmcli con delete id "${PROFILE_NAME}" >/dev/null 2>&1
+        fi
         sleep 2
 
         # Make a copy of the VPN file. We do this becuasse NetworkManager
@@ -523,37 +550,57 @@ function _vpn_connect() {
 
         # Import the new profile
         echo -e "  ${green}Importing new VPN profile${reset}"
-        echo 
-        nmcli con import type openvpn file "${VPN_SERVERS}/${PROFILE_NAME}.ovpn" >/dev/null 2>&1 
+        echo
+        if [ $DEBUG -eq 1 ]; then
+            nmcli con import type openvpn file "${VPN_SERVERS}/${PROFILE_NAME}.ovpn"
+        else 
+            nmcli con import type openvpn file "${VPN_SERVERS}/${PROFILE_NAME}.ovpn" >/dev/null 2>&1
+        fi
         sleep 2
 
         echo -e "  ${green}Configuring profile${reset}"
         echo 
 
         # Insert username into config file
-        sudo nmcli connection modify "${PROFILE_NAME}" +vpn.data username="${USERNAME}" >/dev/null 2>&1
-
+        if [ $DEBUG -eq 1 ]; then
+            sudo nmcli connection modify "${PROFILE_NAME}" +vpn.data username="${USERNAME}"
+        else
+            sudo nmcli connection modify "${PROFILE_NAME}" +vpn.data username="${USERNAME}" >/dev/null 2>&1
+        fi
         # Set the password flag
-        sudo nmcli connection modify "${PROFILE_NAME}" +vpn.data password-flags=0 >/dev/null 2>&1 
-
+        if [ $DEBUG -eq 1 ]; then
+            sudo nmcli connection modify "${PROFILE_NAME}" +vpn.data password-flags=0 
+        else
+            sudo nmcli connection modify "${PROFILE_NAME}" +vpn.data password-flags=0 >/dev/null 2>&1 
+        fi
         # Write password into the profile file.
         # Note: since the profiles are stored in /root we use sudo tee
-        echo -e "\n\n[vpn-secrets]\npassword=${PASSWORD}" | sudo tee -a "${PROFILE_PATH}/${PROFILE_NAME}" >/dev/null 2>&1 
+        if [ $DEBUG -eq 1 ]; then
+            echo -e "\n\n[vpn-secrets]\npassword=${PASSWORD}" | sudo tee -a "${PROFILE_PATH}/${PROFILE_NAME}"
+        else
+            echo -e "\n\n[vpn-secrets]\npassword=${PASSWORD}" | sudo tee -a "${PROFILE_PATH}/${PROFILE_NAME}" >/dev/null 2>&1 
+        fi
         sleep 2
 
         # Reload the config file
         echo
         echo -e "  ${green}Reloading config file${reset}"
         echo
-        sudo nmcli connection reload "${PROFILE_NAME}"  >/dev/null 2>&1 
-
+        if [ $DEBUG -eq 1 ]; then
+            sudo nmcli connection reload "${PROFILE_NAME}" 
+        else
+            sudo nmcli connection reload "${PROFILE_NAME}" >/dev/null 2>&1 
+        fi
         # Delete the temp file
         rm "${VPN_SERVERS}/${PROFILE_NAME}.ovpn"
 
         echo -e "  ${green}Connecting to ${server}${reset}"
         echo
-        nmcli con up id "${PROFILE_NAME}" >/dev/null 2>&1 
-
+        if [ $DEBUG -eq 1 ]; then
+            nmcli con up id "${PROFILE_NAME}"
+        else
+            nmcli con up id "${PROFILE_NAME}" >/dev/null 2>&1 
+        fi
         _reset_geolocation
         _geolocation
         _submenu
@@ -572,7 +619,11 @@ function _vpn_disconnect() {
     if [ -z "${ACTIVECONS}" ] || ! echo "$ACTIVECONS" | egrep -q "(^|\s)${PROFILE_NAME}($|\s)"; then
         echo -e " ${yellow}You are not connected to a VPN${reset}"
     else
-        nmcli -t con down id "${PROFILE_NAME}" >/dev/null 2>&1
+        if [ $DEBUG -eq 1 ]; then
+            nmcli -t con down id "${PROFILE_NAME}"
+        else
+            nmcli -t con down id "${PROFILE_NAME}" >/dev/null 2>&1
+        fi
         _reset_geolocation
         echo -e " ${yellow}You have been disconnected from ${PROFILE_NAME}${reset}"
     fi
