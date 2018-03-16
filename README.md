@@ -21,7 +21,7 @@ Before running WifiVPN do the following:
 
 ### Create credentials file
 
-Create a file named `credentials.sh` and place it in the `WifiVPN` folder. In that file, put your Nord VPN login credentials as follows:
+Create a file named `credentials.sh` and place it in the `WifiVPN` folder. In that file, put your Nord VPN login credentials as follows and make the file executable:
 
     #!/usr/bin/env bash
 
