@@ -7,7 +7,7 @@
 #                     |_|        
 #
 #-----------------------------------------------------------------------------------
-VERSION="1.3.7"
+VERSION="1.3.8"
 #-----------------------------------------------------------------------------------
 #
 # Enables Wifi and Nord VPN connectivity using Network Manager Command Line Interface.
@@ -69,11 +69,6 @@ PROFILE_NAME="NordVPN"
 
 # Debug mode to show error messages. 1=on, 2=off
 DEBUG=0
-
-# ------------------------------------------------------------------------------
-
-# Load the credentials file
-. ${BASEPATH}/${CREDENTIALS}
 
 # ------------------------------------------------------------------------------
 
@@ -250,14 +245,14 @@ function _wifi_connect() {
 
     # Rescan the network for a current list of hotspots
     if [ $DEBUG -eq 1 ]; then
-        nmcli -w 4 device wifi rescan
+        nmcli device wifi rescan
     else
-        nmcli -w 4 device wifi rescan >/dev/null 2>&1 
+        nmcli device wifi rescan >/dev/null 2>&1 
     fi
-    sleep 4
 
     # Generate a list of all available hotspots
-    nmcli dev wifi
+    #nmcli dev wifi
+    nmcli dev wifi list
 
     echo
     echo -e "  ENTER THE NAME OF A NETWORK TO CONNECT TO, OR"
@@ -379,7 +374,15 @@ function _vpn_connect() {
 
     heading blue "VPN CONNECT"
 
-    if [ -z "${ACTIVECONS}" ]; then
+    # Does the credentials file exist? We can't continue without it
+    if [ ! -f ${BASEPATH}/${CREDENTIALS} ]; then
+
+        echo -e "${red}ERROR: No credentials file found${reset}"
+        echo
+        echo "Please see README for instructions on setting it up"
+        echo
+        _submenu
+    elif [ -z "${ACTIVECONS}" ]; then
         echo
         echo -e " ${yellow}You are not connected to a wifi network.${reset}"
         echo
@@ -387,6 +390,9 @@ function _vpn_connect() {
         echo
         _submenu        
     else
+
+        # Source the credentials file
+        . ${BASEPATH}/${CREDENTIALS}
 
         # Is there an existing Nord profile?
         VPN_PROFILE="n"
