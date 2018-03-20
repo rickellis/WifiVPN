@@ -11,6 +11,7 @@ A Linux installation running the following packages:
 
 * networkmanager
 * openvpn
+* networkmanager-openvpn
 * networkmanager-vpnc
 * dhclient
 * libsecret
