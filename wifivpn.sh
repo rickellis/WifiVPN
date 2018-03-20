@@ -7,7 +7,7 @@
 #                     |_|        
 #
 #-----------------------------------------------------------------------------------
-VERSION="1.3.8"
+VERSION="1.3.9"
 #-----------------------------------------------------------------------------------
 #
 # Enables Wifi and Nord VPN connectivity using Network Manager Command Line Interface.
@@ -900,7 +900,7 @@ function _download_vpn_files() {
         echo 
         echo -e "  ${red}Deleting old VPN connection files${reset}"
 
-        rm ${VPN_SERVERS}/*
+        rm ${VPN_SERVERS}/* >/dev/null 2>&1 
         sleep 3
     fi
 
