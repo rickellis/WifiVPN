@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #-----------------------------------------------------------------------------------
-#          _  __ _               
-#  __ __ _(_)/ _(_)_ ___ __ _ _  
-#  \ V  V / |  _| \ V / '_ \ ' \ 
+#          _  __ _
+#  __ __ _(_)/ _(_)_ ___ __ _ _
+#  \ V  V / |  _| \ V / '_ \ ' \
 #   \_/\_/|_|_| |_|\_/| .__/_||_|
-#                     |_|        
+#                     |_|
 #
 #-----------------------------------------------------------------------------------
 VERSION="1.3.9"
@@ -67,7 +67,7 @@ VPN_SERVERS_SFX=".tcp.ovpn"
 # disconnect, and delete the profile without needing a storage mechanism for the name.
 PROFILE_NAME="NordVPN"
 
-# Debug mode to show error messages. 1=on, 2=off
+# Debug mode to show error messages. 1=on, 0=off
 DEBUG=0
 
 # ------------------------------------------------------------------------------
@@ -154,7 +154,7 @@ function _show_status_table() {
     STATUS="${STATUS//(site only)/${yellow}(Wifi Only)${reset}}"
     STATUS="${STATUS//unknown/${magenta}Unknown${reset}}"
     echo -e "  ${STATUS}"
-    echo 
+    echo
 }
 
 # ------------------------------------------------------------------------------
@@ -168,7 +168,7 @@ function _home_menu() {
     heading purple "WifiVPN VERSION ${VERSION}"
     echo
     _show_status_table
-    
+
     if [ -z "${ACTIVECONS}" ]; then
         echo -e "  You are not connected to a network"
     else
@@ -180,7 +180,7 @@ function _home_menu() {
 
     echo -e "  1) ${green}^${reset} Wifi Connect"
     echo -e "  2) ${red}v${reset} Wifi Disconnect"
-    echo 
+    echo
     echo -e "  3) ${green}^${reset} VPN  Connect"
     echo -e "  4) ${red}v${reset} VPN  Disconnect"
     echo
@@ -247,7 +247,7 @@ function _wifi_connect() {
     if [ $DEBUG -eq 1 ]; then
         nmcli device wifi rescan
     else
-        nmcli device wifi rescan >/dev/null 2>&1 
+        nmcli device wifi rescan >/dev/null 2>&1
     fi
 
     # Generate a list of all available hotspots
@@ -308,7 +308,7 @@ function _wifi_connect() {
 
         echo
         read -p "  ENTER PASSWORD (OR HIT ENTER TO LEAVE BLANK):  " PASSWD
-        echo 
+        echo
         echo -e "  ${green}Establishing a connection${reset}"
         echo
 
@@ -338,7 +338,7 @@ function _wifi_connect() {
 function _wifi_disconnect() {
 
     heading red "WIFI DISCONNECT"
-    echo 
+    echo
 
     if [ -z "${ACTIVECONS}" ]; then
         echo -e " ${yellow}You are not connected to a wifi network${reset}"
@@ -388,7 +388,7 @@ function _vpn_connect() {
         echo
         echo -e " ${yellow}Before connecting to Nord VPN you must first be connected to wifi.${reset}"
         echo
-        _submenu        
+        _submenu
     else
 
         # Source the credentials file
@@ -402,10 +402,10 @@ function _vpn_connect() {
 
         echo -e "  MENU OPTIONS"
         echo
-        echo -e "  N) ${green}^${reset} CONNECT TO THE FASTEST SERVER" 
+        echo -e "  N) ${green}^${reset} CONNECT TO THE FASTEST SERVER"
 
         if [ "${VPN_PROFILE}" == "y" ]; then
-            echo -e "  L) ${green}^${reset} CONNECT TO LAST USED PROFILE" 
+            echo -e "  L) ${green}^${reset} CONNECT TO LAST USED PROFILE"
         fi
 
         echo
@@ -436,7 +436,7 @@ function _vpn_connect() {
         # If they hit "L" we use the last profile
         if [ "$SELECTION" == 'l' ] || [ "$SELECTION" == 'L' ]; then
             if [ "${VPN_PROFILE}" == "n" ]; then
-                echo -e "  ${red}INVALID OPTION: ${reset} there are no saved profiles. Aborting..." 
+                echo -e "  ${red}INVALID OPTION: ${reset} there are no saved profiles. Aborting..."
                 clear
                 exit 1
             else
@@ -495,12 +495,12 @@ function _vpn_connect() {
             else
                 nmcli -t con down id "${PROFILE_NAME}" >/dev/null 2>&1
             fi
-            sleep 2 
+            sleep 2
         fi
 
-        echo 
+        echo
         echo -e "  ${green}Downloading Nord VPN server data${reset}"
-        echo 
+        echo
 
         # Fetch the server data from Nord. JSON format.
         # This curl/json query by Sean Ewing
@@ -542,7 +542,7 @@ function _vpn_connect() {
         echo
         if [ $DEBUG -eq 1 ]; then
             nmcli con delete id "${PROFILE_NAME}"
-        else 
+        else
             nmcli con delete id "${PROFILE_NAME}" >/dev/null 2>&1
         fi
         sleep 2
@@ -559,13 +559,13 @@ function _vpn_connect() {
         echo
         if [ $DEBUG -eq 1 ]; then
             nmcli con import type openvpn file "${VPN_SERVERS}/${PROFILE_NAME}.ovpn"
-        else 
+        else
             nmcli con import type openvpn file "${VPN_SERVERS}/${PROFILE_NAME}.ovpn" >/dev/null 2>&1
         fi
         sleep 2
 
         echo -e "  ${green}Configuring profile${reset}"
-        echo 
+        echo
 
         # Insert username into config file
         if [ $DEBUG -eq 1 ]; then
@@ -575,16 +575,16 @@ function _vpn_connect() {
         fi
         # Set the password flag
         if [ $DEBUG -eq 1 ]; then
-            sudo nmcli connection modify "${PROFILE_NAME}" +vpn.data password-flags=0 
+            sudo nmcli connection modify "${PROFILE_NAME}" +vpn.data password-flags=0
         else
-            sudo nmcli connection modify "${PROFILE_NAME}" +vpn.data password-flags=0 >/dev/null 2>&1 
+            sudo nmcli connection modify "${PROFILE_NAME}" +vpn.data password-flags=0 >/dev/null 2>&1
         fi
         # Write password into the profile file.
         # Note: since the profiles are stored in /root we use sudo tee
         if [ $DEBUG -eq 1 ]; then
             echo -e "\n\n[vpn-secrets]\npassword=${PASSWORD}" | sudo tee -a "${PROFILE_PATH}/${PROFILE_NAME}"
         else
-            echo -e "\n\n[vpn-secrets]\npassword=${PASSWORD}" | sudo tee -a "${PROFILE_PATH}/${PROFILE_NAME}" >/dev/null 2>&1 
+            echo -e "\n\n[vpn-secrets]\npassword=${PASSWORD}" | sudo tee -a "${PROFILE_PATH}/${PROFILE_NAME}" >/dev/null 2>&1
         fi
         sleep 2
 
@@ -593,9 +593,9 @@ function _vpn_connect() {
         echo -e "  ${green}Reloading config file${reset}"
         echo
         if [ $DEBUG -eq 1 ]; then
-            sudo nmcli connection reload "${PROFILE_NAME}" 
+            sudo nmcli connection reload "${PROFILE_NAME}"
         else
-            sudo nmcli connection reload "${PROFILE_NAME}" >/dev/null 2>&1 
+            sudo nmcli connection reload "${PROFILE_NAME}" >/dev/null 2>&1
         fi
         # Delete the temp file
         rm "${VPN_SERVERS}/${PROFILE_NAME}.ovpn"
@@ -605,7 +605,7 @@ function _vpn_connect() {
         if [ $DEBUG -eq 1 ]; then
             nmcli con up id "${PROFILE_NAME}"
         else
-            nmcli con up id "${PROFILE_NAME}" >/dev/null 2>&1 
+            nmcli con up id "${PROFILE_NAME}" >/dev/null 2>&1
         fi
         _reset_geolocation
         _geolocation
@@ -617,7 +617,7 @@ function _vpn_connect() {
 
 # Disconnect from the active VPN connection
 function _vpn_disconnect() {
-   
+
     heading red "VPN DISCONNECT"
     echo
 
@@ -648,16 +648,16 @@ function _geolocation() {
     if [ -z "${ACTIVECONS}" ]; then
         echo -e " ${yellow}Geolocation data not available${reset}"
     else
-        
+
         if [ -z "$IP" ]; then
 
-            IP=$(curl -slent ${IPLOOKUP_URL})        
+            IP=$(curl -slent ${IPLOOKUP_URL})
             IPDATA=$(curl -slent ${GEOLOOKUP_URL}${IP})
 
-            CITY=$(echo $IPDATA | jq -r .city) >/dev/null 2>&1 
-            STATE=$(echo $IPDATA | jq -r .region_name) >/dev/null 2>&1 
-            TZ=$(echo $IPDATA | jq -r .time_zone) >/dev/null 2>&1 
-            CTRY=$(echo $IPDATA | jq -r .country_name) >/dev/null 2>&1 
+            CITY=$(echo $IPDATA | jq -r .city) >/dev/null 2>&1
+            STATE=$(echo $IPDATA | jq -r .region_name) >/dev/null 2>&1
+            TZ=$(echo $IPDATA | jq -r .time_zone) >/dev/null 2>&1
+            CTRY=$(echo $IPDATA | jq -r .country_name) >/dev/null 2>&1
 
             if [ -z "$TZ" ]; then
                 TZ="n/a"
@@ -670,7 +670,7 @@ function _geolocation() {
         echo -e " IP address: ${cyan}${IP}${reset}"
         echo
 
-        if [ -z "$CITY" ]; then 
+        if [ -z "$CITY" ]; then
             echo -e " Location:   ${yellow}${CTRY}${reset}"
         else
             echo -e " Location:   ${yellow}${CITY} ${STATE} ${CTRY}${reset}"
@@ -692,10 +692,10 @@ function _utilities() {
     echo
     echo -e "  3) ${green}^${reset} Turn Wifi Interface On"
     echo -e "  4) ${red}v${reset} Turn Wifi Interface Off"
-    echo 
+    echo
     echo -e "  5) ${green}^${reset} Turn Network Interface On"
     echo -e "  6) ${red}v${reset} Turn Network Interface Off"
-    echo 
+    echo
     echo -e "  7) ${green}>${reset} Show Saved Profiles"
     echo -e "  8) ${red}v${reset} Delete a Saved Profile"
     echo
@@ -703,7 +703,7 @@ function _utilities() {
     echo
     echo -e "  M) ${yellow}^${reset} MAIN MENU"
     echo -e "  X) ${yellow}<${reset} EXIT"
-    echo 
+    echo
     read -p "  ENTER SELECTION:  " SELECTION
 
     # If they hit ENTER we exit
@@ -743,7 +743,7 @@ function _utilities() {
     ;;
     3)
         clear
-        _turn_wifi_on 
+        _turn_wifi_on
     ;;
     4)
         clear
@@ -752,7 +752,7 @@ function _utilities() {
     5)
         clear
         _turn_network_on
-       
+
     ;;
     6)
         clear
@@ -891,20 +891,20 @@ function _download_vpn_files() {
 
     if [ ! -d "${VPN_SERVERS}" ]; then
 
-        echo 
+        echo
         echo -e "  ${green}Creating destination folder${reset}"
 
         mkdir ${VPN_SERVERS}
     else
 
-        echo 
+        echo
         echo -e "  ${red}Deleting old VPN connection files${reset}"
 
-        rm ${VPN_SERVERS}/* >/dev/null 2>&1 
+        rm ${VPN_SERVERS}/* >/dev/null 2>&1
         sleep 3
     fi
 
-    echo 
+    echo
     echo -e "  ${green}Downloading Nord VPN connection files${reset}"
 
     # wget is a little easier to work with so we use it
@@ -914,12 +914,12 @@ function _download_vpn_files() {
         curl -o -s /tmp/ovpn.zip "${NORD_CONNECTION_FILES}"
     fi
 
-    echo 
+    echo
     echo -e "  ${green}Extracting archive${reset}"
 
     unzip -q /tmp/ovpn.zip -d /tmp/
 
-    echo 
+    echo
     echo -e "  ${green}Copying files to: ${VPN_SERVERS}/${reset}"
 
     cp -a "/tmp/ovpn_tcp/." "${VPN_SERVERS}"
@@ -930,10 +930,10 @@ function _download_vpn_files() {
     rm -r /tmp/ovpn_tcp
     rm -r /tmp/ovpn_udp
 
-    echo 
+    echo
     echo -e "  ${green}Done!${reset}"
 
-    _util_submenu   
+    _util_submenu
 }
 
 # ------------------------------------------------------------------------------
@@ -978,7 +978,7 @@ function _util_submenu(){
     echo -e "  M) ${yellow}^${reset} MAIN MENU"
     echo -e "  U) ${yellow}^${reset} UTILITIES"
     echo -e "  X) ${yellow}<${reset} EXIT"
-    echo 
+    echo
     read -p "  ENTER SELECTION:  " SELECTION
 
     # If they hit ENTER we exit
